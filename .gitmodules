@@ -1,3 +1,6 @@
 [submodule "regal"]
 	path = regal
 	url = https://github.com/p3/regal
+[submodule "r3"]
+	path = r3
+	url = http://github.com/casseveritt/r3
