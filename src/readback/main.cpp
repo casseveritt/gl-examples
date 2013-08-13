@@ -52,10 +52,7 @@ static void render_fbo() {
   glViewport( 0, 0, width, height );
 
 
-  //glGenerateTextureMipmapEXT( fbotex, GL_TEXTURE_2D );
-  glBindTexture( GL_TEXTURE_2D, fbotex );
-  glGenerateMipmap( GL_TEXTURE_2D );
-  glBindTexture( GL_TEXTURE_2D, 0 );
+  glGenerateTextureMipmapEXT( fbotex, GL_TEXTURE_2D );
 
 }
 
