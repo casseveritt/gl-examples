@@ -18,16 +18,18 @@
 using namespace std;
 
 int width, height;
+int fbotex_sz = 4096;
+int fbotex_px_sz = 4;
+GLuint fbotex = 1;
+GLuint fbo = 1;
+char * pix;
+
 
 void reshape( int w, int h ) {
   width = w;
   height = h;
   glViewport( 0, 0, width, height );
 }
-
-int fbotex_sz = 1024;
-GLuint fbotex = 1;
-GLuint fbo = 1;
 
 static void render_fbo() {
 
@@ -56,6 +58,10 @@ static void render_fbo() {
 
 }
 
+void readback() {
+  glReadPixels( 0, 0, fbotex_sz, fbotex_sz, GL_RGBA, GL_UNSIGNED_BYTE, pix );
+}
+
 static void display()
 {
   render_fbo();
@@ -77,12 +83,15 @@ static void display()
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable( GL_TEXTURE_2D );
 
+  readback();
+
   glutSwapBuffers();
 }
 
 static void init_opengl() {
   glBindTexture( GL_TEXTURE_2D, fbotex );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, fbotex_sz, fbotex_sz, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
+  pix = new char[ fbotex_sz * fbotex_sz * fbotex_px_sz ];
 
   glGenFramebuffers( 1, &fbo );
   glBindFramebuffer( GL_FRAMEBUFFER, fbo );
