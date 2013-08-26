@@ -35,8 +35,8 @@
 #  include <OpenGL/OpenGL.h>
 #  include <GLUT/GLUT.h>
 #else
-#  include <GL/gl.h>
-#  include <GL/glut.h>
+#  include <GL/Regal.h>
+#  include <GL/RegalGLUT.h>
 #endif
 
 int width, height;
@@ -48,6 +48,7 @@ GLuint posVbo = 2;
 GLuint colVbo = 3;
 GLuint prog;
 char * pix;
+bool b[256];
 
 typedef unsigned char uchar;
 
@@ -58,12 +59,7 @@ void reshape( int w, int h ) {
   glutPostRedisplay();
 }
 
-static void render_fbo() {
-  
-  glBindTexture( GL_TEXTURE_2D, 0 );
-  
-  glViewport( 0, 0, fbotex_sz, fbotex_sz );
-  glBindFramebuffer( GL_FRAMEBUFFER, fbo );
+void draw2() {
   glClearColor( 1, 1, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
   glPointSize( 1.0 );
@@ -73,11 +69,11 @@ static void render_fbo() {
   // pos
   glBindBuffer( GL_ARRAY_BUFFER, posVbo );
   glEnableVertexAttribArray( 0 );
-  glVertexAttribPointer( 0, 2, GL_UNSIGNED_BYTE, GL_TRUE, 2, NULL );
+  glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 0, NULL );
   // col
   glBindBuffer( GL_ARRAY_BUFFER, colVbo );
   glEnableVertexAttribArray( 1 );
-  glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 4, NULL );
+  glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL );
   
   glBindBuffer( GL_ARRAY_BUFFER, 0 );
   
@@ -87,7 +83,15 @@ static void render_fbo() {
   
   glDisableVertexAttribArray( 0 );
   glDisableVertexAttribArray( 1 );
+}
+
+static void render_fbo() {
   
+  glBindTexture( GL_TEXTURE_2D, 0 );
+  
+  glViewport( 0, 0, fbotex_sz, fbotex_sz );
+  glBindFramebuffer( GL_FRAMEBUFFER, fbo );
+  draw2();
   glBindFramebuffer( GL_FRAMEBUFFER, 0 );
   glViewport( 0, 0, width, height );
   
@@ -99,6 +103,12 @@ void readback() {
 
 static void display()
 {
+  if( b['f'] ) {
+    draw2();
+    glutSwapBuffers();
+    return;
+  }
+
   render_fbo();
   
   glClearColor( 0, 0, 1, 0 );
@@ -130,16 +140,16 @@ static void init_opengl() {
   {
     glGenBuffers( 1, &posVbo );
     glBindBuffer( GL_ARRAY_BUFFER, posVbo );
-    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 2, NULL, GL_STATIC_DRAW );
-    GLubyte * row = new GLubyte[256 * 2];
+    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 2 * sizeof( GLfloat ), NULL, GL_STATIC_DRAW );
+    GLfloat * row = new GLfloat[256 * 2];
     for( int j = 0 ; j < 256; j++ ) {
-      char y = j;
+      GLfloat y = ( j * 2 + 1 - 256 ) / 256.0;
       for( int i = 0; i < 256; i++ ) {
-        char x = i;
+        GLfloat x = ( i * 2 + 1 - 256 ) / 256.0;
         row[ i * 2 + 0 ] = x;
         row[ i * 2 + 1 ] = y;
       }
-      glBufferSubData( GL_ARRAY_BUFFER, j * 256 * 2, 256 * 2, row );
+      glBufferSubData( GL_ARRAY_BUFFER, j * 256 * 2 * sizeof( GLfloat ), 256 * 2 * sizeof( GLfloat ), row );
     }
     delete [] row;
   }
@@ -167,9 +177,7 @@ static void init_opengl() {
     "varying vec4 ocol;\n"
     "\n"
     "void main() {\n"
-    "  vec4 p = pos * 255.0 + vec4( 0.5, 0.5, 0.5, 0.5 );\n"
-    "  p = p * ( 1.0 / 256.0 );\n"
-    "  gl_Position = p * 2.0 - vec4( 1.0, 1.0, 1.0, 1.0 );\n"
+    "  gl_Position = pos;\n"
     "  ocol = col;\n"
     "}\n";
     char *vshader_list[] = { vshader, NULL };
@@ -243,6 +251,7 @@ static void init_opengl() {
 
 static void keyboard(unsigned char c, int x, int y)
 {
+  b[c] = ! b[c];
   switch (c)
   {
     case 'q':
@@ -250,6 +259,7 @@ static void keyboard(unsigned char c, int x, int y)
       exit(0);
       break;
   }
+  glutPostRedisplay();
 }
 
 
