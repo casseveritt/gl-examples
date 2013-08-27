@@ -47,7 +47,8 @@ GLuint fbo = 1;
 GLuint posVbo = 2;
 GLuint colVbo = 3;
 GLuint prog;
-char * pix;
+GLubyte * pix;
+GLubyte * col;
 bool b[256];
 
 typedef unsigned char uchar;
@@ -98,7 +99,17 @@ static void render_fbo() {
 }
 
 void readback() {
+  glBindFramebuffer( GL_FRAMEBUFFER, fbo );
   glReadPixels( 0, 0, fbotex_sz, fbotex_sz, GL_RGBA, GL_UNSIGNED_BYTE, pix );
+  glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+  int sum = 0;
+  for( int i = 0; i < fbotex_sz * fbotex_sz * fbotex_px_sz; i++ ) {
+    int p = pix[i];
+    int c = col[i];
+    int diff = p - c;
+    sum += diff > 0 ? diff : -diff;
+  }
+  printf( "sum of diff between original buffer and readback: %d\n", sum );
 }
 
 static void display()
@@ -158,14 +169,11 @@ static void init_opengl() {
   { // init color vbo with random data
     glGenBuffers( 1, &colVbo );
     glBindBuffer( GL_ARRAY_BUFFER, colVbo );
-    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 4, NULL, GL_DYNAMIC_DRAW );
-    char * row = new char[ 256 * 4 ];
-    for( int j = 0 ; j < 256; j++ ) {
-      for( int i = 0; i < 256 * 4; i++ ) {
-        row[ i ] = uchar( rand() );
-      }
-      glBufferSubData( GL_ARRAY_BUFFER, j * 256 * 4, 256 * 4, row );
+    col = new GLubyte[ 256 * 256 * 4 ];
+    for( int i = 0; i < 256 * 256 * 4; i++ ) {
+      col[ i ] = GLubyte( rand() );
     }
+    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 4, col, GL_DYNAMIC_DRAW );
   }
   glBindBuffer( GL_ARRAY_BUFFER, 0 );
   
@@ -240,7 +248,7 @@ static void init_opengl() {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, fbotex_sz, fbotex_sz, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-  pix = new char[ fbotex_sz * fbotex_sz * fbotex_px_sz ];
+  pix = new GLubyte[ fbotex_sz * fbotex_sz * fbotex_px_sz ];
   
   glGenFramebuffers( 1, &fbo );
   glBindFramebuffer( GL_FRAMEBUFFER, fbo );
