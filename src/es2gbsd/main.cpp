@@ -69,7 +69,7 @@ void draw2() {
   // pos
   glBindBuffer( GL_ARRAY_BUFFER, posVbo );
   glEnableVertexAttribArray( 0 );
-  glVertexAttribPointer( 0, 2, GL_FLOAT, GL_FALSE, 0, NULL );
+  glVertexAttribPointer( 0, 2, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL );
   // col
   glBindBuffer( GL_ARRAY_BUFFER, colVbo );
   glEnableVertexAttribArray( 1 );
@@ -140,16 +140,16 @@ static void init_opengl() {
   {
     glGenBuffers( 1, &posVbo );
     glBindBuffer( GL_ARRAY_BUFFER, posVbo );
-    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 2 * sizeof( GLfloat ), NULL, GL_STATIC_DRAW );
-    GLfloat * row = new GLfloat[256 * 2];
+    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 2, NULL, GL_STATIC_DRAW );
+    GLubyte * row = new GLubyte[256 * 2];
     for( int j = 0 ; j < 256; j++ ) {
-      GLfloat y = ( j * 2 + 1 - 256 ) / 256.0;
+      GLubyte y = j;
       for( int i = 0; i < 256; i++ ) {
-        GLfloat x = ( i * 2 + 1 - 256 ) / 256.0;
+        GLubyte x = i;
         row[ i * 2 + 0 ] = x;
         row[ i * 2 + 1 ] = y;
       }
-      glBufferSubData( GL_ARRAY_BUFFER, j * 256 * 2 * sizeof( GLfloat ), 256 * 2 * sizeof( GLfloat ), row );
+      glBufferSubData( GL_ARRAY_BUFFER, j * 256 * 2, 256 * 2, row );
     }
     delete [] row;
   }
@@ -177,7 +177,8 @@ static void init_opengl() {
     "varying vec4 ocol;\n"
     "\n"
     "void main() {\n"
-    "  gl_Position = pos;\n"
+    "  vec2 p = ( pos.xy * 255.0 * 2.0 + 1.0 - 256.0 ) / 256.0;\n"
+    "  gl_Position = vec4( p.x, p.y, 0.0, 1.0 );\n"
     "  ocol = col;\n"
     "}\n";
     char *vshader_list[] = { vshader, NULL };
@@ -266,7 +267,7 @@ static void keyboard(unsigned char c, int x, int y)
 int main(int argc, const char * argv[])
 {
   glutInitDisplayString("rgba>=8 depth double");
-  glutInitWindowSize(512, 512);
+  glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);
   glutCreateWindow( "gbsd" );
 
