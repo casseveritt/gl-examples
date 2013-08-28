@@ -30,6 +30,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <algorithm>
 
 #if __APPLE__
 #  include <OpenGL/OpenGL.h>
@@ -47,9 +48,12 @@ GLuint fbo = 1;
 GLuint posVbo = 2;
 GLuint colVbo = 3;
 GLuint prog;
-GLubyte * pix;
-GLubyte * col;
+GLubyte pix[1<<24];
+GLubyte bufdata[1<<24];
 bool b[256];
+
+int gbsdOffset = 12386821;
+int gbsdSize = 4390395;
 
 typedef unsigned char uchar;
 
@@ -60,7 +64,7 @@ void reshape( int w, int h ) {
   glutPostRedisplay();
 }
 
-void draw2() {
+void drawBufferObject( int offset, int size ) {
   glClearColor( 1, 1, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
   glPointSize( 1.0 );
@@ -74,53 +78,58 @@ void draw2() {
   // col
   glBindBuffer( GL_ARRAY_BUFFER, colVbo );
   glEnableVertexAttribArray( 1 );
-  glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, NULL );
+  glVertexAttribPointer( 1, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, ((char *)NULL)+offset );
   
   glBindBuffer( GL_ARRAY_BUFFER, 0 );
   
   glUseProgram( prog );
-  glDrawArrays( GL_POINTS, 0, 256 * 256 );
+  glDrawArrays( GL_POINTS, 0, ( size + 3 ) / 4  );
   glUseProgram( 0 );
   
   glDisableVertexAttribArray( 0 );
   glDisableVertexAttribArray( 1 );
 }
 
-static void render_fbo() {
-  
+void GetBufferSubData( int offset, int size ) {
+  int O = offset & ~3;
+  int S = ( size + (offset - O) + 3 ) & ~3;
   glBindTexture( GL_TEXTURE_2D, 0 );
-  
-  glViewport( 0, 0, fbotex_sz, fbotex_sz );
   glBindFramebuffer( GL_FRAMEBUFFER, fbo );
-  draw2();
+  glViewport( 0, 0, fbotex_sz, fbotex_sz );
+  int o = 0;
+  while( o < S ) {
+    int sz = std::min( int(1<<18), S - o );
+    drawBufferObject( O + o, sz );
+    int height = ( ( ( sz + 3 ) / 4 ) + fbotex_sz - 1 ) / fbotex_sz;
+    glReadPixels( 0, 0, fbotex_sz, height, GL_RGBA, GL_UNSIGNED_BYTE, pix + o );
+    o += sz;
+  }
   glBindFramebuffer( GL_FRAMEBUFFER, 0 );
   glViewport( 0, 0, width, height );
-  
-}
 
-void readback() {
-  glBindFramebuffer( GL_FRAMEBUFFER, fbo );
-  glReadPixels( 0, 0, fbotex_sz, fbotex_sz, GL_RGBA, GL_UNSIGNED_BYTE, pix );
-  glBindFramebuffer( GL_FRAMEBUFFER, 0 );
+  glBindBuffer( GL_ARRAY_BUFFER, colVbo );
+  glGetBufferSubData( GL_ARRAY_BUFFER, O, S, bufdata );
+  glBindBuffer( GL_ARRAY_BUFFER, 0 );
+
   int sum = 0;
-  for( int i = 0; i < fbotex_sz * fbotex_sz * fbotex_px_sz; i++ ) {
+  for( int i = offset - O; i < size; i++ ) {
     int p = pix[i];
-    int c = col[i];
-    int diff = p - c;
+    int b = bufdata[i];
+    int diff = p - b;
     sum += diff > 0 ? diff : -diff;
   }
-  printf( "sum of diff between original buffer and readback: %d\n", sum );
+  printf( "sum of diff between emu and gbsd for offset=%d and size=%d: %d\n", offset, size, sum );
 }
 
 static void display()
 {
   if( b['f'] ) {
-    draw2();
+    drawBufferObject( 0, 256 * 256 * 4);
     glutSwapBuffers();
     return;
   }
 
-  render_fbo();
+  GetBufferSubData( gbsdOffset, gbsdSize );
   
   glClearColor( 0, 0, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
@@ -141,8 +150,6 @@ static void display()
   glEnd();
   glBindTexture( GL_TEXTURE_2D, 0 );
   glDisable( GL_TEXTURE_2D );
-  
-  readback();
   
   glutSwapBuffers();
 }
@@ -169,11 +176,14 @@ static void init_opengl() {
   { // init color vbo with random data
     glGenBuffers( 1, &colVbo );
     glBindBuffer( GL_ARRAY_BUFFER, colVbo );
-    col = new GLubyte[ 256 * 256 * 4 ];
-    for( int i = 0; i < 256 * 256 * 4; i++ ) {
-      col[ i ] = GLubyte( rand() );
+    glBufferData( GL_ARRAY_BUFFER, sizeof(bufdata), NULL, GL_DYNAMIC_DRAW );
+    GLubyte col[1024];
+    for( int j = 0; j < sizeof( bufdata ) / sizeof( col ); j++ ) {
+      for( int i = 0; i < 1024; i++ ) {
+        col[ i ] = GLubyte( rand() );
+      }
+      glBufferSubData( GL_ARRAY_BUFFER, j * sizeof( col ), sizeof( col ), col );
     }
-    glBufferData( GL_ARRAY_BUFFER, 256 * 256 * 4, col, GL_DYNAMIC_DRAW );
   }
   glBindBuffer( GL_ARRAY_BUFFER, 0 );
   
@@ -257,7 +267,6 @@ static void init_opengl() {
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, fbotex_sz, fbotex_sz, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST );
   glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST );
-  pix = new GLubyte[ fbotex_sz * fbotex_sz * fbotex_px_sz ];
   
   glGenFramebuffers( 1, &fbo );
   glBindFramebuffer( GL_FRAMEBUFFER, fbo );
@@ -276,6 +285,15 @@ static void keyboard(unsigned char c, int x, int y)
     case 27:  /* Esc key */
       exit(0);
       break;
+    case 'o':
+      gbsdOffset = rand() & ((1<<24)-1);
+      gbsdSize = std::min( gbsdSize, int(1<<24)-gbsdOffset );
+      break;
+    case 's':
+      gbsdSize = rand() & ((1<<25)-1);
+      gbsdSize = std::min( gbsdSize, int(1<<24)-gbsdOffset );
+    default:
+      break;
   }
   glutPostRedisplay();
 }
@@ -289,6 +307,8 @@ int main(int argc, const char * argv[])
   glutCreateWindow( "gbsd" );
 
   init_opengl();
+  gbsdSize = std::min( gbsdSize, int(1<<24)-gbsdOffset );
+
   
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
