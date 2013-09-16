@@ -32,13 +32,8 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#if __APPLE__
-#  include <OpenGL/OpenGL.h>
-#  include <GLUT/GLUT.h>
-#else
-#  include <GL/Regal.h>
-#  include <GL/RegalGLUT.h>
-#endif
+#include <GL/Regal.h>
+#include <GL/RegalGLUT.h>
 
 int width, height;
 bool b[256];
@@ -96,6 +91,11 @@ int main(int argc, const char * argv[])
   glutInit( &argc, (char **) argv);
   glutCreateWindow( "subdiv" );
 
+#if REGAL_SYS_OSX
+  // Regal workaround for OSX GLUT
+  RegalMakeCurrent(CGLGetCurrentContext());
+#endif
+  
   init_opengl();
   
   glutDisplayFunc( display );

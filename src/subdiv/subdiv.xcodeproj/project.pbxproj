@@ -7,10 +7,28 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		43ED0D1017CBD653005536B1 /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43ED0D0F17CBD653005536B1 /* GLUT.framework */; };
-		43ED0D1217CBD661005536B1 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 43ED0D1117CBD661005536B1 /* OpenGL.framework */; };
+		4329A47717E65FD100718ECC /* libr3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47617E65FB600718ECC /* libr3.a */; };
+		4329A47E17E662A400718ECC /* libRegal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47D17E6627400718ECC /* libRegal.a */; };
+		4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A4FC17E6824600718ECC /* GLUT.framework */; };
 		43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43ED0D1517CC0CC7005536B1 /* main.cpp */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4329A47517E65FB600718ECC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4329A47117E65FB600718ECC /* r3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4388179615E17B5700E3BCFB;
+			remoteInfo = r3;
+		};
+		4329A47C17E6627400718ECC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4329A47817E6627400718ECC /* Regal.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43A6C1C615C48CD90063667E;
+			remoteInfo = Regal;
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
 		43ED0D0117CBD402005536B1 /* CopyFiles */ = {
@@ -25,9 +43,10 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		4329A47117E65FB600718ECC /* r3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = r3.xcodeproj; path = ../../r3/build/mac/r3.xcodeproj; sourceTree = "<group>"; };
+		4329A47817E6627400718ECC /* Regal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Regal.xcodeproj; path = ../../regal/build/mac/Regal/Regal.xcodeproj; sourceTree = "<group>"; };
+		4329A4FC17E6824600718ECC /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		43ED0D0317CBD402005536B1 /* subdiv */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = subdiv; sourceTree = BUILT_PRODUCTS_DIR; };
-		43ED0D0F17CBD653005536B1 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
-		43ED0D1117CBD661005536B1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		43ED0D1517CC0CC7005536B1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
 
@@ -36,19 +55,37 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				43ED0D1217CBD661005536B1 /* OpenGL.framework in Frameworks */,
-				43ED0D1017CBD653005536B1 /* GLUT.framework in Frameworks */,
+				4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */,
+				4329A47E17E662A400718ECC /* libRegal.a in Frameworks */,
+				4329A47717E65FD100718ECC /* libr3.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		4329A47217E65FB600718ECC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4329A47617E65FB600718ECC /* libr3.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4329A47917E6627400718ECC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4329A47D17E6627400718ECC /* libRegal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		43ED0CFA17CBD402005536B1 = {
 			isa = PBXGroup;
 			children = (
-				43ED0D1117CBD661005536B1 /* OpenGL.framework */,
-				43ED0D0F17CBD653005536B1 /* GLUT.framework */,
+				4329A4FC17E6824600718ECC /* GLUT.framework */,
+				4329A47817E6627400718ECC /* Regal.xcodeproj */,
+				4329A47117E65FB600718ECC /* r3.xcodeproj */,
 				43ED0D0517CBD402005536B1 /* code */,
 				43ED0D0417CBD402005536B1 /* Products */,
 			);
@@ -110,12 +147,39 @@
 			mainGroup = 43ED0CFA17CBD402005536B1;
 			productRefGroup = 43ED0D0417CBD402005536B1 /* Products */;
 			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4329A47217E65FB600718ECC /* Products */;
+					ProjectRef = 4329A47117E65FB600718ECC /* r3.xcodeproj */;
+				},
+				{
+					ProductGroup = 4329A47917E6627400718ECC /* Products */;
+					ProjectRef = 4329A47817E6627400718ECC /* Regal.xcodeproj */;
+				},
+			);
 			projectRoot = "";
 			targets = (
 				43ED0D0217CBD402005536B1 /* subdiv */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4329A47617E65FB600718ECC /* libr3.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libr3.a;
+			remoteRef = 4329A47517E65FB600718ECC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4329A47D17E6627400718ECC /* libRegal.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRegal.a;
+			remoteRef = 4329A47C17E6627400718ECC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
 
 /* Begin PBXSourcesBuildPhase section */
 		43ED0CFF17CBD402005536B1 /* Sources */ = {
@@ -134,8 +198,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -155,9 +219,10 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
+				HEADER_SEARCH_PATHS = ../../regal/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
-				SDKROOT = macosx;
+				SDKROOT = macosx10.7;
 			};
 			name = Debug;
 		};
@@ -166,8 +231,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
-				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
@@ -181,8 +246,9 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.8;
-				SDKROOT = macosx;
+				HEADER_SEARCH_PATHS = ../../regal/include;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx10.7;
 			};
 			name = Release;
 		};
