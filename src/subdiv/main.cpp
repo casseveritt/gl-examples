@@ -35,6 +35,106 @@
 #include <GL/Regal.h>
 #include <GL/RegalGLUT.h>
 
+
+// subdiv data structures
+#include "r3/linear.h"
+#include <vector>
+#include <map>
+using namespace std;
+
+namespace subdiv {
+
+  typedef r3::Vec3f Vec3f;
+
+  struct Vertex {
+    vector<int> edgeIndex;
+    vector<int> faceIndex;
+  };
+  
+  struct Edge {
+    Edge() : v0(-1), v1(-1), f0(-1), f1(-1) {}
+    int v0, v1;
+    int f0, f1;
+  };
+  
+  struct Face {
+    vector<int> vertIndex;
+    vector<int> edgeIndex;
+  };
+  
+  struct Model {
+    vector<Vec3f> vpos;
+    vector<Vertex> vert;
+    vector<Face> face;
+    vector<Edge> edge;
+  };
+
+}
+
+subdiv::Model model;
+
+void derive_subdiv_from_face_verts( subdiv::Model & m ) {
+  
+}
+
+void build_subdiv_cube( subdiv::Model & m ) {
+  m = subdiv::Model();
+  m.vpos.push_back( r3::Vec3f( -1, -1,  1 ) );
+  m.vpos.push_back( r3::Vec3f(  1, -1,  1 ) );
+  m.vpos.push_back( r3::Vec3f(  1,  1,  1 ) );
+  m.vpos.push_back( r3::Vec3f( -1,  1,  1 ) );
+  m.vpos.push_back( r3::Vec3f( -1, -1, -1 ) );
+  m.vpos.push_back( r3::Vec3f(  1, -1, -1 ) );
+  m.vpos.push_back( r3::Vec3f(  1,  1, -1 ) );
+  m.vpos.push_back( r3::Vec3f( -1,  1, -1 ) );
+  // +z
+  subdiv::Face f;
+  f.vertIndex.push_back( 0 );
+  f.vertIndex.push_back( 1 );
+  f.vertIndex.push_back( 2 );
+  f.vertIndex.push_back( 3 );
+  m.face.push_back( f );
+  // -z
+  f = subdiv::Face();
+  f.vertIndex.push_back( 5 );
+  f.vertIndex.push_back( 4 );
+  f.vertIndex.push_back( 7 );
+  f.vertIndex.push_back( 6 );
+  m.face.push_back( f );
+  // +x
+  f = subdiv::Face();
+  f.vertIndex.push_back( 1 );
+  f.vertIndex.push_back( 5 );
+  f.vertIndex.push_back( 6 );
+  f.vertIndex.push_back( 2 );
+  m.face.push_back( f );
+  // -x
+  f = subdiv::Face();
+  f.vertIndex.push_back( 4 );
+  f.vertIndex.push_back( 0 );
+  f.vertIndex.push_back( 3 );
+  f.vertIndex.push_back( 7 );
+  m.face.push_back( f );
+  // +y
+  f = subdiv::Face();
+  f.vertIndex.push_back( 3 );
+  f.vertIndex.push_back( 2 );
+  f.vertIndex.push_back( 6 );
+  f.vertIndex.push_back( 7 );
+  m.face.push_back( f );
+  // -y
+  f = subdiv::Face();
+  f.vertIndex.push_back( 4 );
+  f.vertIndex.push_back( 5 );
+  f.vertIndex.push_back( 1 );
+  f.vertIndex.push_back( 0 );
+  m.face.push_back( f );
+  
+}
+
+
+
+
 int width, height;
 bool b[256];
 
