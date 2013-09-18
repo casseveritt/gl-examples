@@ -40,6 +40,7 @@
 #include "r3/linear.h"
 #include <vector>
 #include <map>
+#include <set>
 using namespace std;
 
 namespace subdiv {
@@ -53,9 +54,34 @@ namespace subdiv {
   
   struct Edge {
     Edge() : v0(-1), v1(-1), f0(-1), f1(-1) {}
+    Edge( int vi0, int vi1, int face ) {
+      if( vi0 < vi1 ) {
+        v0 = vi0;
+        v1 = vi1;
+        f0 = face;
+        f1 = -1;
+      } else {
+        v1 = vi0;
+        v0 = vi1;
+        f0 = -1;
+        f1 = face;
+      }
+    }
+    void AddFace( int vi0, int vi1, int face ) {
+      if( vi0 < vi1 ) {
+        assert( f0 == -1 );
+        f0 = face;
+      } else {
+        assert( f1 == -1 );
+        f1 = face;
+      }
+    }
     int v0, v1;
     int f0, f1;
   };
+  bool operator<( const Edge & a, const Edge & b ) {
+    return a.v0 < b.v0 || ( ( a.v0 == b.v0 ) && ( a.v1 < b.v1 ) );
+  }
   
   struct Face {
     vector<int> vertIndex;
@@ -77,8 +103,30 @@ namespace subdiv {
 
 subdiv::Model model;
 
+
+
+
 void derive_subdiv_from_face_verts( subdiv::Topo & t ) {
-  
+  map<subdiv::Edge, int> em;
+  for( int i = 0; i < t.face.size(); i++ ) {
+    subdiv::Face &f = t.face[i];
+    assert( f.vertIndex.size() > 2 );
+    for( int j = 0; j < f.vertIndex.size(); j++ ) {
+      int j0 = f.vertIndex[ j ];
+      int j1 = f.vertIndex[ ( j + 1 ) % f.vertIndex.size() ];
+      subdiv::Edge e( j0, j1, i );
+      int eidx = -1;
+      if( em.count( e ) != 0 ) {
+        eidx = em[e];
+        subdiv::Edge & ee = t.edge[ eidx ];
+        ee.AddFace( j0, j1, i );
+      } else {
+        eidx = em[e] = (int)t.edge.size();
+        t.edge.push_back( e );
+      }
+      f.edgeIndex.push_back( eidx );
+    }
+  }
 }
 
 void build_subdiv_cube( subdiv::Model & m ) {
@@ -132,7 +180,9 @@ void build_subdiv_cube( subdiv::Model & m ) {
   f.vertIndex.push_back( 5 );
   f.vertIndex.push_back( 1 );
   f.vertIndex.push_back( 0 );
-  m.topo.face.push_back( f );  
+  m.topo.face.push_back( f );
+  
+  derive_subdiv_from_face_verts( m.topo );
 }
 
 
@@ -150,14 +200,13 @@ void draw_model( subdiv::Model & m ) {
   }
   glDisable( GL_POLYGON_OFFSET_FILL );
   glColor3f( 0.4, 0.4, 0.4 );
-  for( int i = 0; i < m.topo.face.size(); i++ ) {
-    subdiv::Face &f = m.topo.face[i];
-    glBegin( GL_LINE_LOOP );
-    for( int j = 0; j < f.vertIndex.size(); j++) {
-      glVertex3fv( m.vpos[ f.vertIndex[ j ] ].Ptr() );
-    }
-    glEnd();
+  glBegin( GL_LINES );
+  for( int i = 0; i < m.topo.edge.size(); i++ ) {
+    subdiv::Edge &e = m.topo.edge[i];
+    glVertex3fv( m.vpos[ e.v0 ].Ptr() );
+    glVertex3fv( m.vpos[ e.v1 ].Ptr() );
   }
+  glEnd();
 }
 
 
