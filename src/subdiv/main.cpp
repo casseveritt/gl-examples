@@ -62,18 +62,22 @@ namespace subdiv {
     vector<int> edgeIndex;
   };
   
-  struct Model {
-    vector<Vec3f> vpos;
+  struct Topo {
     vector<Vertex> vert;
     vector<Face> face;
     vector<Edge> edge;
   };
-
+  
+  struct Model {
+    vector<Vec3f> vpos;
+    Topo topo;
+  };
+  
 }
 
 subdiv::Model model;
 
-void derive_subdiv_from_face_verts( subdiv::Model & m ) {
+void derive_subdiv_from_face_verts( subdiv::Topo & t ) {
   
 }
 
@@ -93,50 +97,113 @@ void build_subdiv_cube( subdiv::Model & m ) {
   f.vertIndex.push_back( 1 );
   f.vertIndex.push_back( 2 );
   f.vertIndex.push_back( 3 );
-  m.face.push_back( f );
+  m.topo.face.push_back( f );
   // -z
   f = subdiv::Face();
   f.vertIndex.push_back( 5 );
   f.vertIndex.push_back( 4 );
   f.vertIndex.push_back( 7 );
   f.vertIndex.push_back( 6 );
-  m.face.push_back( f );
+  m.topo.face.push_back( f );
   // +x
   f = subdiv::Face();
   f.vertIndex.push_back( 1 );
   f.vertIndex.push_back( 5 );
   f.vertIndex.push_back( 6 );
   f.vertIndex.push_back( 2 );
-  m.face.push_back( f );
+  m.topo.face.push_back( f );
   // -x
   f = subdiv::Face();
   f.vertIndex.push_back( 4 );
   f.vertIndex.push_back( 0 );
   f.vertIndex.push_back( 3 );
   f.vertIndex.push_back( 7 );
-  m.face.push_back( f );
+  m.topo.face.push_back( f );
   // +y
   f = subdiv::Face();
   f.vertIndex.push_back( 3 );
   f.vertIndex.push_back( 2 );
   f.vertIndex.push_back( 6 );
   f.vertIndex.push_back( 7 );
-  m.face.push_back( f );
+  m.topo.face.push_back( f );
   // -y
   f = subdiv::Face();
   f.vertIndex.push_back( 4 );
   f.vertIndex.push_back( 5 );
   f.vertIndex.push_back( 1 );
   f.vertIndex.push_back( 0 );
-  m.face.push_back( f );
-  
+  m.topo.face.push_back( f );  
 }
 
 
+void draw_model( subdiv::Model & m ) {
+  glColor3f( 1, 1, 1 );
+  for( int i = 0; i < m.topo.face.size(); i++ ) {
+    subdiv::Face &f = m.topo.face[i];
+    glBegin( GL_TRIANGLE_FAN );
+    for( int j = 0; j < f.vertIndex.size(); j++) {
+      glVertex3fv( m.vpos[ f.vertIndex[ j ] ].Ptr() );
+    }
+    glEnd();
+  }
+}
 
 
 int width, height;
 bool b[256];
+
+int mousebtn = -1;
+r3::Vec2f mousepos;
+r3::Vec3f trans( 0, 0, -3 );
+r3::Rotationf rot;
+
+void mouse( int button, int state, int x, int y ) {
+  //printf( "Mouse func %d %d %d %d\n", button, state, x, y );
+  y = height - 1 - y;
+  if( state == GLUT_DOWN ) {
+    mousebtn = button;
+    mousepos = r3::Vec2f( x, y );
+  } else {
+    mousebtn = -1;
+  }
+  glutPostRedisplay();
+}
+
+void project_to_hump( r3::Vec3f & v ) {
+  v.z = pow( 2.0, -(v.x * v.x + v.y * v.y) );
+  v.Normalize();
+}
+
+void motion( int x, int y ) {
+  //printf( "Motion func %d %d\n", x, y );
+  if( mousebtn == -1 ) {
+    return;
+  }
+  y = height - 1 - y;
+  r3::Vec2f mp = r3::Vec2f( x, y );
+  switch( mousebtn ) {
+    case GLUT_RIGHT_BUTTON:
+      trans.z -= 0.02f * ( mp.y - mousepos.y );
+      break;
+    case GLUT_LEFT_BUTTON:
+    {
+      float mindim = width < height ? width : height;
+      r3::Vec3f p0( mousepos.x - width / 2, mousepos.y - height / 2, 0 );
+      r3::Vec3f p1( mp.x - width / 2, mp.y - height / 2, 0 );
+      p0 /= mindim / 2;
+      p1 /= mindim / 2;
+      project_to_hump( p0 );
+      project_to_hump( p1 );
+      r3::Rotationf r;
+      r.SetValue( p0, p1 );
+      rot = r * rot;
+    }
+    default:
+      break;
+  }
+  mousepos = mp;
+  glutPostRedisplay();
+}
 
 void reshape( int w, int h ) {
   width = w;
@@ -151,21 +218,20 @@ static void display()
   glClearColor( 0, 0, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
   
-  glColor3f( 1, 1, 1 );
-  glPushMatrix();
-  glScalef( 0.9, 0.9, 0.9 );
-  glBegin( GL_QUADS );
-  glVertex2f  ( -1, -1 );
-  glVertex2f  (  1, -1 );
-  glVertex2f  (  1,  1 );
-  glVertex2f  ( -1,  1 );
-  glEnd();
-  glPopMatrix();
+  glMatrixPushEXT( GL_MODELVIEW );
+  glMatrixTranslatefEXT( GL_MODELVIEW, trans.x, trans.y, trans.z );
+  r3::Vec3f axis;
+  float angle;
+  rot.GetValue( axis, angle );
+  glMatrixRotatefEXT( GL_MODELVIEW, r3::ToDegrees( angle ), axis.x, axis.y, axis.z );
+  draw_model( model );
+  glMatrixPopEXT( GL_MODELVIEW );
   
   glutSwapBuffers();
 }
 
 static void init_opengl() {
+  glMatrixFrustumEXT( GL_PROJECTION, -0.1, 0.1, -0.1, 0.1, 0.1, 10);
 }
 
 static void keyboard(unsigned char c, int x, int y)
@@ -198,6 +264,10 @@ int main(int argc, const char * argv[])
   
   init_opengl();
   
+  build_subdiv_cube( model );
+  
+  glutMouseFunc( mouse );
+  glutMotionFunc( motion );
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
   glutKeyboardFunc( keyboard );
