@@ -137,10 +137,22 @@ void build_subdiv_cube( subdiv::Model & m ) {
 
 
 void draw_model( subdiv::Model & m ) {
+  glPolygonOffset( 1, 1 );
+  glEnable( GL_POLYGON_OFFSET_FILL );
   glColor3f( 1, 1, 1 );
   for( int i = 0; i < m.topo.face.size(); i++ ) {
     subdiv::Face &f = m.topo.face[i];
     glBegin( GL_TRIANGLE_FAN );
+    for( int j = 0; j < f.vertIndex.size(); j++) {
+      glVertex3fv( m.vpos[ f.vertIndex[ j ] ].Ptr() );
+    }
+    glEnd();
+  }
+  glDisable( GL_POLYGON_OFFSET_FILL );
+  glColor3f( 0.4, 0.4, 0.4 );
+  for( int i = 0; i < m.topo.face.size(); i++ ) {
+    subdiv::Face &f = m.topo.face[i];
+    glBegin( GL_LINE_LOOP );
     for( int j = 0; j < f.vertIndex.size(); j++) {
       glVertex3fv( m.vpos[ f.vertIndex[ j ] ].Ptr() );
     }
@@ -216,7 +228,7 @@ static void display()
 {
   
   glClearColor( 0, 0, 1, 0 );
-  glClear( GL_COLOR_BUFFER_BIT );
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   glMatrixPushEXT( GL_MODELVIEW );
   glMatrixTranslatefEXT( GL_MODELVIEW, trans.x, trans.y, trans.z );
@@ -232,6 +244,8 @@ static void display()
 
 static void init_opengl() {
   glMatrixFrustumEXT( GL_PROJECTION, -0.1, 0.1, -0.1, 0.1, 0.1, 10);
+  glEnable( GL_DEPTH_TEST );
+  glDepthFunc( GL_LESS );
 }
 
 static void keyboard(unsigned char c, int x, int y)
