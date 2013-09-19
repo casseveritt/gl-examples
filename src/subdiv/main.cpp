@@ -95,19 +95,20 @@ namespace subdiv {
   };
   
   struct Model {
+    Model() : prev(NULL), next(NULL) {}
     vector<Vec3f> vpos;
     Topo topo;
+    Model *prev;
+    Model *next;
   };
   
 }
 
 subdiv::Model model;
 
-
-
-
 void derive_subdiv_from_face_verts( subdiv::Topo & t ) {
   map<subdiv::Edge, int> em;
+  int maxvert = 0;
   for( int i = 0; i < t.face.size(); i++ ) {
     subdiv::Face &f = t.face[i];
     assert( f.vertIndex.size() > 2 );
@@ -125,9 +126,35 @@ void derive_subdiv_from_face_verts( subdiv::Topo & t ) {
         t.edge.push_back( e );
       }
       f.edgeIndex.push_back( eidx );
+      maxvert = max( maxvert, j0 );
     }
   }
+  t.vert.resize( maxvert + 1 );
+  for( int i = 0; i < t.face.size(); i++ ) {
+    subdiv::Face &f = t.face[i];
+    for( int j = 0; j < f.vertIndex.size(); j++ ) {
+      t.vert[ f.vertIndex[ j ] ].faceIndex.push_back( i );
+    }
+  }
+  for( int i = 0; i < t.edge.size(); i++ ) {
+    subdiv::Edge &e = t.edge[i];
+    assert( e.v0 >= 0 );
+    assert( e.v1 >= 0 );
+    t.vert[ e.v0 ].edgeIndex.push_back( i );
+    t.vert[ e.v1 ].edgeIndex.push_back( i );
+  }
 }
+
+
+void subdivide_model( subdiv::Model & m ) {
+  delete m.next;
+  m.next = new subdiv::Model();
+  subdiv::Model &r = *m.next;
+  size_t rverts = m.topo.vert.size() + m.topo.face.size() + m.topo.edge.size();
+  r.vpos.resize( rverts );
+  // finish it!
+}
+
 
 void build_subdiv_cube( subdiv::Model & m ) {
   m = subdiv::Model();
@@ -270,13 +297,21 @@ void reshape( int w, int h ) {
   width = w;
   height = h;
   glViewport( 0, 0, width, height );
+  float aspect = float(width)/float(height);
+  float fov = 0.08;
+  glMatrixLoadIdentityEXT( GL_PROJECTION );
+  if( aspect >= 1.0 ) {
+    glMatrixFrustumEXT( GL_PROJECTION, -fov * aspect, fov * aspect, -fov, fov, 0.1, 10);
+  } else {
+    glMatrixFrustumEXT( GL_PROJECTION, -fov, fov, -fov/aspect, fov/aspect, 0.1, 10);
+  }
   glutPostRedisplay();
 }
 
 static void display()
 {
   
-  glClearColor( 0, 0, 1, 0 );
+  glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   glMatrixPushEXT( GL_MODELVIEW );
@@ -292,7 +327,6 @@ static void display()
 }
 
 static void init_opengl() {
-  glMatrixFrustumEXT( GL_PROJECTION, -0.1, 0.1, -0.1, 0.1, 0.1, 10);
   glEnable( GL_DEPTH_TEST );
   glDepthFunc( GL_LESS );
 }
@@ -315,7 +349,7 @@ static void keyboard(unsigned char c, int x, int y)
 
 int main(int argc, const char * argv[])
 {
-  glutInitDisplayString("rgba>=8 depth double");
+  glutInitDisplayString("rgba>=8 depth double samples=4");
   glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);
   glutCreateWindow( "subdiv" );
