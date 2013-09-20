@@ -53,7 +53,7 @@ namespace subdiv {
   };
   
   struct Edge {
-    Edge() : v0(-1), v1(-1), f0(-1), f1(-1) {}
+    Edge() : v0( ~0 ), v1( ~0 ), f0( ~0 ), f1( ~0 ), parent( ~0 ) {}
     Edge( size_t vi0, size_t vi1, size_t face ) {
       if( vi0 < vi1 ) {
         v0 = vi0;
@@ -78,6 +78,7 @@ namespace subdiv {
     }
     size_t v0, v1;
     size_t f0, f1;
+    size_t parent;
   };
   bool operator<( const Edge & a, const Edge & b ) {
     return a.v0 < b.v0 || ( ( a.v0 == b.v0 ) && ( a.v1 < b.v1 ) );
@@ -92,6 +93,7 @@ namespace subdiv {
     vector<Vertex> vert;
     vector<Face> face;
     vector<Edge> edge;
+    map<Edge,size_t> edgeMap;
   };
   
   struct Model {
@@ -210,7 +212,7 @@ namespace subdiv {
   }
 
   void derive_topo_from_face_verts( Topo & t ) {
-    map<Edge, int> em;
+    map<Edge, size_t> & em = t.edgeMap;
     size_t maxvert = 0;
     for( int i = 0; i < t.face.size(); i++ ) {
       Face &f = t.face[i];
@@ -219,7 +221,7 @@ namespace subdiv {
         size_t j0 = f.vertIndex[ j ];
         size_t j1 = f.vertIndex[ ( j + 1 ) % f.vertIndex.size() ];
         Edge e( j0, j1, i );
-        int eidx = -1;
+        size_t eidx = ~0;
         if( em.count( e ) != 0 ) {
           eidx = em[e];
           Edge & ee = t.edge[ eidx ];
@@ -257,6 +259,7 @@ namespace subdiv {
     Model &r = *m.next;
     size_t pv = m.topo.vert.size(); // previous verts
     size_t pf = m.topo.face.size(); // previous faces
+    size_t pe = m.topo.edge.size(); // previous faces
     
     // populate faces
     size_t fb = pv;        // base offset for newly added per-face vertexes
@@ -308,8 +311,30 @@ namespace subdiv {
         }
       }
     }
+    derive_topo_from_face_verts( r.topo );    
+ 
+    /*
+    for( size_t i = 0; i < pe; i++ ) {
+      Vertex & v = r.topo.vert[ eb + i ];
+      size_t idx[2];
+      size_t children[2];
+      int curr_idx = 0;
+      for( size_t j = 0; j < v.edgeIndex.size() && curr_idx < 2; j++ ) {
+        Edge & e = r.topo.edge[ v.edgeIndex[ j ] ];
+        if( e.v0 < pv ) {
+          idx[ curr_idx++ ] = e.v0;
+          children[ curr_idx ] = j;
+        }
+      }
+      assert( curr_idx == 2 );
+      Edge e( idx[0], idx[1], 0 );
+      assert( m.topo.edgeMap.count( e ) > 0 );
+      size_t parent = m.topo.edgeMap[ e ];
+      r.topo.edge[ children[ 0 ] ].parent = parent;
+      r.topo.edge[ children[ 1 ] ].parent = parent;
+    }
+     */
     
-    derive_topo_from_face_verts( r.topo );
   }
   
   void subdivide_model( Model & m ) {
@@ -550,7 +575,7 @@ static void keyboard(unsigned char c, int x, int y)
       printf( "Model level = %d\n", (int)model->level );
       break;
     case 'f':
-      if( model->next == NULL && model->level < 4 ) {
+      if( model->next == NULL && model->level < 6 ) {
         subdiv::subdivide_model( *model );
       }
       if( model->next ) {
