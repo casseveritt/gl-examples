@@ -102,6 +102,8 @@ namespace subdiv {
       }
     }
     vector<Vec3f> vpos;
+    vector<Vec3f> vnrm;
+    vector<Vec3f> fnrm;
     Topo topo;
     Model *prev;
     Model *next;
@@ -110,6 +112,37 @@ namespace subdiv {
   
   
   //
+
+  void compute_normals( Model & m ) {
+    m.fnrm.resize( m.topo.face.size() );
+    for( size_t i = 0; i < m.fnrm.size(); i++ ) {
+      Face & f = m.topo.face[i];
+      Vec3f & v0 = m.vpos[ f.vertIndex[0] ];
+      Vec3f n(0,0,0);
+      for( size_t j = 1; j < f.vertIndex.size() - 1; j++ ) {
+        Vec3f & v1 = m.vpos[ f.vertIndex[j] ];
+        Vec3f & v2 = m.vpos[ f.vertIndex[j+1] ];
+        Vec3f tn = (v1-v0).Cross( v2-v0 );
+        tn.Normalize();
+        n+= tn;
+      }
+      n.Normalize();
+      m.fnrm[ i ] = n;
+    }
+    
+    m.vnrm.resize( m.vpos.size() );
+    
+    for( size_t i = 0; i < m.vnrm.size(); i++ ) {
+      Vertex & v = m.topo.vert[ i ];
+      size_t faces = v.faceIndex.size();
+      Vec3f n(0,0,0);
+      for( size_t j = 0; j < faces; j++ ) {
+        n += m.fnrm[ v.faceIndex[ j ] ];
+      }
+      n.Normalize();
+      m.vnrm[ i ] = n;
+    }
+  }
   
   void average( Model & m ) {
     if( m.prev == NULL ) {
@@ -269,6 +302,7 @@ namespace subdiv {
     split_model( m );
     if( m.next != NULL ) {
       average( *m.next );
+      compute_normals( *m.next );
     }
   }
 
@@ -331,39 +365,7 @@ void build_subdiv_cube( subdiv::Model & m ) {
   m.topo.face.push_back( f );
   
   derive_topo_from_face_verts( m.topo );
-}
-
-
-void draw_model( subdiv::Model & m ) {
-  glPolygonOffset( 1, 1 );
-  glEnable( GL_POLYGON_OFFSET_FILL );
-  glColor3f( 1, 1, 1 );
-  for( int i = 0; i < m.topo.face.size(); i++ ) {
-    subdiv::Face &f = m.topo.face[i];
-    glBegin( GL_TRIANGLE_FAN );
-    for( int j = 0; j < f.vertIndex.size(); j++) {
-      glVertex3fv( m.vpos[ f.vertIndex[ j ] ].Ptr() );
-    }
-    glEnd();
-  }
-  glDisable( GL_POLYGON_OFFSET_FILL );
-  glColor3f( 0.4, 0.4, 0.4 );
-  glBegin( GL_LINES );
-  for( int i = 0; i < m.topo.edge.size(); i++ ) {
-    subdiv::Edge &e = m.topo.edge[i];
-    glVertex3fv( m.vpos[ e.v0 ].Ptr() );
-    glVertex3fv( m.vpos[ e.v1 ].Ptr() );
-  }
-  glEnd();
-  
-  glColor3f( .5, .5, 0 );
-  glPointSize( 8 );
-  glBegin( GL_POINTS );
-  for( int i = 0; i < m.vpos.size(); i++ ) {
-    glVertex3fv( m.vpos[ i ].Ptr() );
-  }
-  glEnd();
-  
+  compute_normals( m );
 }
 
 
@@ -374,6 +376,56 @@ int mousebtn = -1;
 r3::Vec2f mousepos;
 r3::Vec3f trans( 0, 0, -3 );
 r3::Rotationf rot;
+
+
+
+void draw_model( subdiv::Model & m ) {
+  glPolygonOffset( 1, 1 );
+  glEnable( GL_POLYGON_OFFSET_FILL );
+  glEnable( GL_COLOR_MATERIAL );
+  glEnable( GL_LIGHT0 );
+  glEnable( GL_LIGHTING );
+  glColor3f( 0, 0, 1 );
+  for( int i = 0; i < m.topo.face.size(); i++ ) {
+    subdiv::Face &f = m.topo.face[i];
+    glBegin( GL_TRIANGLE_FAN );
+    for( int j = 0; j < f.vertIndex.size(); j++) {
+      size_t vi = f.vertIndex[j];
+      r3::Vec3f c = m.vnrm[ vi ];
+      c *= 0.5;
+      c += 0.5;
+      //glColor3fv( c.Ptr() );
+      glNormal3fv( m.vnrm[ vi ].Ptr() );
+      glVertex3fv( m.vpos[ vi ].Ptr() );
+    }
+    glEnd();
+  }
+  glDisable( GL_LIGHTING );
+  glDisable( GL_POLYGON_OFFSET_FILL );
+
+  if( b['w'] ) {
+    glColor3f( 0.4, 0.4, 0.4 );
+    glBegin( GL_LINES );
+    for( int i = 0; i < m.topo.edge.size(); i++ ) {
+      subdiv::Edge &e = m.topo.edge[i];
+      glVertex3fv( m.vpos[ e.v0 ].Ptr() );
+      glVertex3fv( m.vpos[ e.v1 ].Ptr() );
+    }
+    glEnd();
+  }
+  
+  if( b['p'] ) {
+    glColor3f( .5, .5, 0 );
+    glPointSize( 3 );
+    glBegin( GL_POINTS );
+    for( int i = 0; i < m.vpos.size(); i++ ) {
+      glVertex3fv( m.vpos[ i ].Ptr() );
+    }
+    glEnd();
+  }
+  
+}
+
 
 void mouse( int button, int state, int x, int y ) {
   //printf( "Mouse func %d %d %d %d\n", button, state, x, y );
@@ -444,6 +496,7 @@ static void display()
   glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
+
   glMatrixPushEXT( GL_MODELVIEW );
   glMatrixTranslatefEXT( GL_MODELVIEW, trans.x, trans.y, trans.z );
   r3::Vec3f axis;
@@ -459,6 +512,14 @@ static void display()
 static void init_opengl() {
   glEnable( GL_DEPTH_TEST );
   glDepthFunc( GL_LESS );
+  GLfloat shininess = 64.0f;
+  glMaterialfv( GL_FRONT_AND_BACK, GL_SHININESS, &shininess );
+  // FIXME: That this is required is a Regal bug!  Material's default specular is not supposed to be zero, but it is.
+  //        This is almost certainly my fault. -Cass
+  GLfloat spec[] = { 1, 1, 1, 1 };
+  glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
+  GLfloat lightpos[] = { 0.5, 1, 1, 0 };
+  glLightfv( GL_LIGHT0, GL_POSITION, lightpos );
 }
 
 static void keyboard(unsigned char c, int x, int y)
