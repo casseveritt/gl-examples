@@ -96,6 +96,11 @@ namespace subdiv {
   
   struct Model {
     Model() : prev(NULL), next(NULL), level(0) {}
+    ~Model() {
+      if( next != 0 ) {
+        delete next;
+      }
+    }
     vector<Vec3f> vpos;
     Topo topo;
     Model *prev;
@@ -117,11 +122,7 @@ namespace subdiv {
 
     m.vpos.resize( m.topo.vert.size() );
     
-    // initially, don't average, just so we can make a picture that shows the splitting works
-    for( size_t i = 0; i < pv; i++ ) {
-      m.vpos[i] = prev.vpos[i];
-    }
-    
+    // per-face verts
     for( size_t i = 0; i < pf; i++ ) {
       Vec3f p( 0, 0, 0);
       Face & f = prev.topo.face[i];
@@ -133,11 +134,30 @@ namespace subdiv {
       m.vpos[ pv + i ] = p;
     }
 
+    // per-edge verts
     for( size_t i = 0; i < pe; i++ ) {
       Edge & e = prev.topo.edge[ i ];
-      Vec3f p = ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] ) / 2.0f;
+      Vec3f p = ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] + m.vpos[ pv + e.f0 ] + m.vpos[ pv + e.f1 ] ) / 4.0f;
       m.vpos[ pv + pf + i ] = p;
     }
+    
+    // original verts
+    for( size_t i = 0; i < pv; i++ ) {
+      Vertex & ov = prev.topo.vert[i];
+      size_t valence = ov.edgeIndex.size();
+      Vec3f fp(0, 0, 0);
+      Vec3f rp(0, 0, 0);
+      for( size_t i = 0; i < valence; i++ ) {
+        fp += m.vpos[ pv + ov.faceIndex[i] ];
+        rp += m.vpos[ pv + pf + ov.edgeIndex[i] ];
+      }
+      fp /= valence;
+      rp /= valence;
+      Vec3f p = fp + rp * 2.0f + prev.vpos[i] * float( valence - 3 );
+      p /= valence;
+      m.vpos[i] = p;
+    }
+    
     
   }
 
@@ -463,6 +483,7 @@ static void keyboard(unsigned char c, int x, int y)
         model = model->next;
       }
       printf( "Model level = %d\n", (int)model->level );
+      break;
     case 's':
       subdiv::subdivide_model( *model );
       break;
