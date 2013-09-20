@@ -147,9 +147,10 @@ namespace subdiv {
       size_t valence = ov.edgeIndex.size();
       Vec3f fp(0, 0, 0);
       Vec3f rp(0, 0, 0);
-      for( size_t i = 0; i < valence; i++ ) {
-        fp += m.vpos[ pv + ov.faceIndex[i] ];
-        rp += m.vpos[ pv + pf + ov.edgeIndex[i] ];
+      for( size_t j = 0; j < valence; j++ ) {
+        fp += m.vpos[ pv + ov.faceIndex[j] ];
+        Edge & e = prev.topo.edge[ ov.edgeIndex[j] ];
+        rp += ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] ) / 2.0f;
       }
       fp /= valence;
       rp /= valence;
