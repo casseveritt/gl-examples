@@ -514,8 +514,6 @@ static void init_opengl() {
   glDepthFunc( GL_LESS );
   GLfloat shininess = 64.0f;
   glMaterialfv( GL_FRONT_AND_BACK, GL_SHININESS, &shininess );
-  // FIXME: That this is required is a Regal bug!  Material's default specular is not supposed to be zero, but it is.
-  //        This is almost certainly my fault. -Cass
   GLfloat spec[] = { 1, 1, 1, 1 };
   glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
   GLfloat lightpos[] = { 0.5, 1, 1, 0 };
