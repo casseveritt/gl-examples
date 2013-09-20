@@ -48,44 +48,44 @@ namespace subdiv {
   typedef r3::Vec3f Vec3f;
 
   struct Vertex {
-    vector<int> edgeIndex;
-    vector<int> faceIndex;
+    vector<size_t> edgeIndex;
+    vector<size_t> faceIndex;
   };
   
   struct Edge {
     Edge() : v0(-1), v1(-1), f0(-1), f1(-1) {}
-    Edge( int vi0, int vi1, int face ) {
+    Edge( size_t vi0, size_t vi1, size_t face ) {
       if( vi0 < vi1 ) {
         v0 = vi0;
         v1 = vi1;
         f0 = face;
-        f1 = -1;
+        f1 = ~0;
       } else {
         v1 = vi0;
         v0 = vi1;
-        f0 = -1;
+        f0 = ~0;
         f1 = face;
       }
     }
-    void AddFace( int vi0, int vi1, int face ) {
+    void AddFace( size_t vi0, size_t vi1, size_t face ) {
       if( vi0 < vi1 ) {
-        assert( f0 == -1 );
+        assert( f0 == ~0 );
         f0 = face;
       } else {
-        assert( f1 == -1 );
+        assert( f1 == ~0 );
         f1 = face;
       }
     }
-    int v0, v1;
-    int f0, f1;
+    size_t v0, v1;
+    size_t f0, f1;
   };
   bool operator<( const Edge & a, const Edge & b ) {
     return a.v0 < b.v0 || ( ( a.v0 == b.v0 ) && ( a.v1 < b.v1 ) );
   }
   
   struct Face {
-    vector<int> vertIndex;
-    vector<int> edgeIndex;
+    vector<size_t> vertIndex;
+    vector<size_t> edgeIndex;
   };
   
   struct Topo {
@@ -95,65 +95,165 @@ namespace subdiv {
   };
   
   struct Model {
-    Model() : prev(NULL), next(NULL) {}
+    Model() : prev(NULL), next(NULL), level(0) {}
     vector<Vec3f> vpos;
     Topo topo;
     Model *prev;
     Model *next;
+    size_t level;
   };
   
-}
+  
+  //
+  
+  void average( Model & m ) {
+    if( m.prev == NULL ) {
+      return;
+    }
+    Model & prev = *m.prev;
+    size_t pv = prev.topo.vert.size(); // previous verts
+    size_t pf = prev.topo.face.size(); // previous faces
+    size_t pe = prev.topo.edge.size(); // previous edges
 
-subdiv::Model model;
-
-void derive_subdiv_from_face_verts( subdiv::Topo & t ) {
-  map<subdiv::Edge, int> em;
-  int maxvert = 0;
-  for( int i = 0; i < t.face.size(); i++ ) {
-    subdiv::Face &f = t.face[i];
-    assert( f.vertIndex.size() > 2 );
-    for( int j = 0; j < f.vertIndex.size(); j++ ) {
-      int j0 = f.vertIndex[ j ];
-      int j1 = f.vertIndex[ ( j + 1 ) % f.vertIndex.size() ];
-      subdiv::Edge e( j0, j1, i );
-      int eidx = -1;
-      if( em.count( e ) != 0 ) {
-        eidx = em[e];
-        subdiv::Edge & ee = t.edge[ eidx ];
-        ee.AddFace( j0, j1, i );
-      } else {
-        eidx = em[e] = (int)t.edge.size();
-        t.edge.push_back( e );
+    m.vpos.resize( m.topo.vert.size() );
+    
+    // initially, don't average, just so we can make a picture that shows the splitting works
+    for( size_t i = 0; i < pv; i++ ) {
+      m.vpos[i] = prev.vpos[i];
+    }
+    
+    for( size_t i = 0; i < pf; i++ ) {
+      Vec3f p( 0, 0, 0);
+      Face & f = prev.topo.face[i];
+      size_t fv = f.vertIndex.size();
+      for( size_t j = 0; j < fv; j++ ) {
+        p += prev.vpos[ f.vertIndex[ j ] ];
       }
-      f.edgeIndex.push_back( eidx );
-      maxvert = max( maxvert, j0 );
+      p /= float( fv );
+      m.vpos[ pv + i ] = p;
+    }
+
+    for( size_t i = 0; i < pe; i++ ) {
+      Edge & e = prev.topo.edge[ i ];
+      Vec3f p = ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] ) / 2.0f;
+      m.vpos[ pv + pf + i ] = p;
+    }
+    
+  }
+
+  void derive_topo_from_face_verts( Topo & t ) {
+    map<Edge, int> em;
+    size_t maxvert = 0;
+    for( int i = 0; i < t.face.size(); i++ ) {
+      Face &f = t.face[i];
+      assert( f.vertIndex.size() > 2 );
+      for( int j = 0; j < f.vertIndex.size(); j++ ) {
+        size_t j0 = f.vertIndex[ j ];
+        size_t j1 = f.vertIndex[ ( j + 1 ) % f.vertIndex.size() ];
+        Edge e( j0, j1, i );
+        int eidx = -1;
+        if( em.count( e ) != 0 ) {
+          eidx = em[e];
+          Edge & ee = t.edge[ eidx ];
+          ee.AddFace( j0, j1, i );
+        } else {
+          eidx = em[e] = (int)t.edge.size();
+          t.edge.push_back( e );
+        }
+        f.edgeIndex.push_back( eidx );
+        maxvert = max( maxvert, j0 );
+      }
+    }
+    t.vert.resize( maxvert + 1 );
+    for( int i = 0; i < t.face.size(); i++ ) {
+      Face &f = t.face[i];
+      for( int j = 0; j < f.vertIndex.size(); j++ ) {
+        t.vert[ f.vertIndex[ j ] ].faceIndex.push_back( i );
+      }
+    }
+    for( int i = 0; i < t.edge.size(); i++ ) {
+      Edge &e = t.edge[i];
+      assert( e.v0 >= 0 );
+      assert( e.v1 >= 0 );
+      t.vert[ e.v0 ].edgeIndex.push_back( i );
+      t.vert[ e.v1 ].edgeIndex.push_back( i );
     }
   }
-  t.vert.resize( maxvert + 1 );
-  for( int i = 0; i < t.face.size(); i++ ) {
-    subdiv::Face &f = t.face[i];
-    for( int j = 0; j < f.vertIndex.size(); j++ ) {
-      t.vert[ f.vertIndex[ j ] ].faceIndex.push_back( i );
+
+
+  void split_model( Model & m ) {
+    delete m.next;
+    m.next = new Model();
+    m.next->prev = &m;
+    m.next->level = m.level + 1;
+    Model &r = *m.next;
+    size_t pv = m.topo.vert.size(); // previous verts
+    size_t pf = m.topo.face.size(); // previous faces
+    
+    // populate faces
+    size_t fb = pv;        // base offset for newly added per-face vertexes
+    size_t eb = pv + pf;   // base offset for newly added per-edge vertexes
+
+    // refined mesh faces
+    for( size_t i = 0; i < pf; i++ ) {
+      Face &f = m.topo.face[i];
+      size_t fv = f.vertIndex.size();
+      if( fv == 4 ) { // ordinary
+        Face rf;
+        // quad 00
+        rf.vertIndex.push_back( f.vertIndex[0] );
+        rf.vertIndex.push_back( eb + f.edgeIndex[0] );
+        rf.vertIndex.push_back( fb + i );
+        rf.vertIndex.push_back( eb + f.edgeIndex[3] );
+        r.topo.face.push_back( rf );
+        // quad 01
+        rf = Face();
+        rf.vertIndex.push_back( eb + f.edgeIndex[0] );
+        rf.vertIndex.push_back( f.vertIndex[1] );
+        rf.vertIndex.push_back( eb + f.edgeIndex[1] );
+        rf.vertIndex.push_back( fb + i );
+        r.topo.face.push_back( rf );
+        // quad 11
+        rf = Face();
+        rf.vertIndex.push_back( fb + i );
+        rf.vertIndex.push_back( eb + f.edgeIndex[1] );
+        rf.vertIndex.push_back( f.vertIndex[2] );
+        rf.vertIndex.push_back( eb + f.edgeIndex[2] );
+        r.topo.face.push_back( rf );
+        // quad 10
+        rf = Face();
+        rf.vertIndex.push_back( eb + f.edgeIndex[3] );
+        rf.vertIndex.push_back( fb + i );
+        rf.vertIndex.push_back( eb + f.edgeIndex[2] );
+        rf.vertIndex.push_back( f.vertIndex[3] );
+        r.topo.face.push_back( rf );
+      } else { // extra-ordinary
+        for( size_t j = 0; j < fv; j++ ) {
+          size_t e0 = f.edgeIndex[j];
+          size_t e1 = f.edgeIndex[ (j + 1) % fv ];
+          Face rf;
+          rf.vertIndex.push_back( f.vertIndex[j] );
+          rf.vertIndex.push_back( eb + e0 );
+          rf.vertIndex.push_back( fb + i );
+          rf.vertIndex.push_back( eb + e1 );
+          r.topo.face.push_back( rf );
+        }
+      }
+    }
+    
+    derive_topo_from_face_verts( r.topo );
+  }
+  
+  void subdivide_model( Model & m ) {
+    split_model( m );
+    if( m.next != NULL ) {
+      average( *m.next );
     }
   }
-  for( int i = 0; i < t.edge.size(); i++ ) {
-    subdiv::Edge &e = t.edge[i];
-    assert( e.v0 >= 0 );
-    assert( e.v1 >= 0 );
-    t.vert[ e.v0 ].edgeIndex.push_back( i );
-    t.vert[ e.v1 ].edgeIndex.push_back( i );
-  }
+
 }
 
-
-void subdivide_model( subdiv::Model & m ) {
-  delete m.next;
-  m.next = new subdiv::Model();
-  subdiv::Model &r = *m.next;
-  size_t rverts = m.topo.vert.size() + m.topo.face.size() + m.topo.edge.size();
-  r.vpos.resize( rverts );
-  // finish it!
-}
+subdiv::Model *model;
 
 
 void build_subdiv_cube( subdiv::Model & m ) {
@@ -209,7 +309,7 @@ void build_subdiv_cube( subdiv::Model & m ) {
   f.vertIndex.push_back( 0 );
   m.topo.face.push_back( f );
   
-  derive_subdiv_from_face_verts( m.topo );
+  derive_topo_from_face_verts( m.topo );
 }
 
 
@@ -234,6 +334,15 @@ void draw_model( subdiv::Model & m ) {
     glVertex3fv( m.vpos[ e.v1 ].Ptr() );
   }
   glEnd();
+  
+  glColor3f( .5, .5, 0 );
+  glPointSize( 8 );
+  glBegin( GL_POINTS );
+  for( int i = 0; i < m.vpos.size(); i++ ) {
+    glVertex3fv( m.vpos[ i ].Ptr() );
+  }
+  glEnd();
+  
 }
 
 
@@ -320,7 +429,7 @@ static void display()
   float angle;
   rot.GetValue( axis, angle );
   glMatrixRotatefEXT( GL_MODELVIEW, r3::ToDegrees( angle ), axis.x, axis.y, axis.z );
-  draw_model( model );
+  draw_model( *model );
   glMatrixPopEXT( GL_MODELVIEW );
   
   glutSwapBuffers();
@@ -339,6 +448,23 @@ static void keyboard(unsigned char c, int x, int y)
     case 'q':
     case 27:  /* Esc key */
       exit(0);
+      break;
+    case 'c':
+      if( model->level > 0 ) {
+        model = model->prev;
+      }
+      printf( "Model level = %d\n", (int)model->level );
+      break;
+    case 'f':
+      if( model->next == NULL && model->level < 4 ) {
+        subdiv::subdivide_model( *model );
+      }
+      if( model->next ) {
+        model = model->next;
+      }
+      printf( "Model level = %d\n", (int)model->level );
+    case 's':
+      subdiv::subdivide_model( *model );
       break;
     default:
       break;
@@ -361,7 +487,8 @@ int main(int argc, const char * argv[])
   
   init_opengl();
   
-  build_subdiv_cube( model );
+  model = new subdiv::Model();
+  build_subdiv_cube( *model );
   
   glutMouseFunc( mouse );
   glutMotionFunc( motion );
