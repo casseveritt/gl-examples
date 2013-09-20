@@ -170,7 +170,19 @@ namespace subdiv {
     // per-edge verts
     for( size_t i = 0; i < pe; i++ ) {
       Edge & e = prev.topo.edge[ i ];
-      Vec3f p = ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] + m.vpos[ pv + e.f0 ] + m.vpos[ pv + e.f1 ] ) / 4.0f;
+      Vec3f p = prev.vpos[ e.v0 ];
+      size_t count = 1;
+      p += prev.vpos[ e.v1 ];
+      count++;
+      if( e.f0 != ~0 ) {
+        p += m.vpos[ pv + e.f0 ];
+        count++;
+      }
+      if( e.f1 != ~0 ) {
+        p += m.vpos[ pv + e.f1 ];
+        count++;
+      }
+      p /= count;
       m.vpos[ pv + pf + i ] = p;
     }
     
@@ -181,12 +193,14 @@ namespace subdiv {
       Vec3f fp(0, 0, 0);
       Vec3f rp(0, 0, 0);
       for( size_t j = 0; j < valence; j++ ) {
-        fp += m.vpos[ pv + ov.faceIndex[j] ];
         Edge & e = prev.topo.edge[ ov.edgeIndex[j] ];
         rp += ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] ) / 2.0f;
       }
-      fp /= valence;
       rp /= valence;
+      for( size_t j = 0; j < ov.faceIndex.size(); j++ ) {
+        fp += m.vpos[ pv + ov.faceIndex[j] ];
+      }
+      fp /= ov.faceIndex.size();
       Vec3f p = fp + rp * 2.0f + prev.vpos[i] * float( valence - 3 );
       p /= valence;
       m.vpos[i] = p;
