@@ -313,7 +313,6 @@ namespace subdiv {
     }
     derive_topo_from_face_verts( r.topo );    
  
-    /*
     for( size_t i = 0; i < pe; i++ ) {
       Vertex & v = r.topo.vert[ eb + i ];
       size_t idx[2];
@@ -322,8 +321,9 @@ namespace subdiv {
       for( size_t j = 0; j < v.edgeIndex.size() && curr_idx < 2; j++ ) {
         Edge & e = r.topo.edge[ v.edgeIndex[ j ] ];
         if( e.v0 < pv ) {
-          idx[ curr_idx++ ] = e.v0;
+          idx[ curr_idx ] = e.v0;
           children[ curr_idx ] = j;
+          curr_idx++;
         }
       }
       assert( curr_idx == 2 );
@@ -333,8 +333,7 @@ namespace subdiv {
       r.topo.edge[ children[ 0 ] ].parent = parent;
       r.topo.edge[ children[ 1 ] ].parent = parent;
     }
-     */
-    
+
   }
   
   void subdivide_model( Model & m ) {
