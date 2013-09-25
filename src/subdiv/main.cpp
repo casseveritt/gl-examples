@@ -427,7 +427,10 @@ void build_subdiv_cube( subdiv::Model & m ) {
   compute_normals( m );
   subdiv::Edge *ep = m.topo.FindEdge( 0, 1 );
   assert( ep );
-  ep->crease = 4.0;
+  ep->crease = 3.0;
+  ep = m.topo.FindEdge( 2, 3 );
+  assert( ep );
+  ep->crease = 3.0;
 }
 
 
