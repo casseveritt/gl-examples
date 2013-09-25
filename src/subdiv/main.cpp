@@ -53,8 +53,8 @@ namespace subdiv {
   };
   
   struct Edge {
-    Edge() : v0( ~0 ), v1( ~0 ), f0( ~0 ), f1( ~0 ), parent( ~0 ) {}
-    Edge( size_t vi0, size_t vi1, size_t face ) {
+    Edge() : v0( ~0 ), v1( ~0 ), f0( ~0 ), f1( ~0 ), crease( 0.0f ) {}
+    Edge( size_t vi0, size_t vi1, size_t face ) : crease( 0.0f ) {
       if( vi0 < vi1 ) {
         v0 = vi0;
         v1 = vi1;
@@ -78,7 +78,7 @@ namespace subdiv {
     }
     size_t v0, v1;
     size_t f0, f1;
-    size_t parent;
+    float crease;
   };
   bool operator<( const Edge & a, const Edge & b ) {
     return a.v0 < b.v0 || ( ( a.v0 == b.v0 ) && ( a.v1 < b.v1 ) );
@@ -94,6 +94,14 @@ namespace subdiv {
     vector<Face> face;
     vector<Edge> edge;
     map<Edge,size_t> edgeMap;
+    Edge * FindEdge( size_t v0, size_t v1 ) {
+      Edge e( v0, v1, 0 );
+      map<Edge,size_t>::iterator i = edgeMap.find( e );
+      if( i != edgeMap.end() ) {
+        return &edge[ i->second ];
+      }
+      return NULL;
+    }
   };
   
   struct Model {
@@ -176,13 +184,15 @@ namespace subdiv {
       size_t count = 1;
       p += prev.vpos[ e.v1 ];
       count++;
-      if( e.f0 != ~0 ) {
-        p += m.vpos[ pv + e.f0 ];
-        count++;
-      }
-      if( e.f1 != ~0 ) {
-        p += m.vpos[ pv + e.f1 ];
-        count++;
+      if( e.crease == 0.0f ) {
+        if( e.f0 != ~0 ) {
+          p += m.vpos[ pv + e.f0 ];
+          count++;
+        }
+        if( e.f1 != ~0 ) {
+          p += m.vpos[ pv + e.f1 ];
+          count++;
+        }
       }
       p /= count;
       m.vpos[ pv + pf + i ] = p;
@@ -194,18 +204,26 @@ namespace subdiv {
       size_t valence = ov.edgeIndex.size();
       Vec3f fp(0, 0, 0);
       Vec3f rp(0, 0, 0);
+      bool creased = false;
       for( size_t j = 0; j < valence; j++ ) {
         Edge & e = prev.topo.edge[ ov.edgeIndex[j] ];
         rp += ( prev.vpos[ e.v0 ] + prev.vpos[ e.v1 ] ) / 2.0f;
+        if( e.crease > 0.0f ) {
+          creased = true;
+        }
       }
-      rp /= valence;
-      for( size_t j = 0; j < ov.faceIndex.size(); j++ ) {
-        fp += m.vpos[ pv + ov.faceIndex[j] ];
+      if( ! creased ) {
+        rp /= valence;
+        for( size_t j = 0; j < ov.faceIndex.size(); j++ ) {
+          fp += m.vpos[ pv + ov.faceIndex[j] ];
+        }
+        fp /= ov.faceIndex.size();
+        Vec3f p = fp + rp * 2.0f + prev.vpos[i] * float( valence - 3 );
+        p /= valence;
+        m.vpos[i] = p;
+      } else {
+        m.vpos[i] = prev.vpos[i];
       }
-      fp /= ov.faceIndex.size();
-      Vec3f p = fp + rp * 2.0f + prev.vpos[i] * float( valence - 3 );
-      p /= valence;
-      m.vpos[i] = p;
     }
     
     
@@ -322,7 +340,7 @@ namespace subdiv {
         Edge & e = r.topo.edge[ v.edgeIndex[ j ] ];
         if( e.v0 < pv ) {
           idx[ curr_idx ] = e.v0;
-          children[ curr_idx ] = j;
+          children[ curr_idx ] = v.edgeIndex[j];
           curr_idx++;
         }
       }
@@ -330,8 +348,11 @@ namespace subdiv {
       Edge e( idx[0], idx[1], 0 );
       assert( m.topo.edgeMap.count( e ) > 0 );
       size_t parent = m.topo.edgeMap[ e ];
-      r.topo.edge[ children[ 0 ] ].parent = parent;
-      r.topo.edge[ children[ 1 ] ].parent = parent;
+      Edge &pe = m.topo.edge[ parent ];
+      float crease = std::max( 0.0f, pe.crease - 1.0f);
+      Edge &e0 = r.topo.edge[ children[ 0 ] ];
+      Edge &e1 = r.topo.edge[ children[ 1 ] ];
+      e0.crease = e1.crease = crease;
     }
 
   }
@@ -404,6 +425,9 @@ void build_subdiv_cube( subdiv::Model & m ) {
   
   derive_topo_from_face_verts( m.topo );
   compute_normals( m );
+  subdiv::Edge *ep = m.topo.FindEdge( 0, 1 );
+  assert( ep );
+  ep->crease = 4.0;
 }
 
 
