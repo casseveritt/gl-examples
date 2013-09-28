@@ -1,0 +1,299 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4329A47717E65FD100718ECC /* libr3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47617E65FB600718ECC /* libr3.a */; };
+		4329A47E17E662A400718ECC /* libRegal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47D17E6627400718ECC /* libRegal.a */; };
+		4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A4FC17E6824600718ECC /* GLUT.framework */; };
+		43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43ED0D1517CC0CC7005536B1 /* main.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4329A47517E65FB600718ECC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4329A47117E65FB600718ECC /* r3.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4388179615E17B5700E3BCFB;
+			remoteInfo = r3;
+		};
+		4329A47C17E6627400718ECC /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4329A47817E6627400718ECC /* Regal.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43A6C1C615C48CD90063667E;
+			remoteInfo = Regal;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		43ED0D0117CBD402005536B1 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4329A47117E65FB600718ECC /* r3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = r3.xcodeproj; path = ../../r3/build/mac/r3.xcodeproj; sourceTree = "<group>"; };
+		4329A47817E6627400718ECC /* Regal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Regal.xcodeproj; path = ../../regal/build/mac/Regal/Regal.xcodeproj; sourceTree = "<group>"; };
+		4329A4FC17E6824600718ECC /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		43ED0D0317CBD402005536B1 /* osdsimple */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = osdsimple; sourceTree = BUILT_PRODUCTS_DIR; };
+		43ED0D1517CC0CC7005536B1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		43ED0D0017CBD402005536B1 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */,
+				4329A47E17E662A400718ECC /* libRegal.a in Frameworks */,
+				4329A47717E65FD100718ECC /* libr3.a in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4329A47217E65FB600718ECC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4329A47617E65FB600718ECC /* libr3.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4329A47917E6627400718ECC /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4329A47D17E6627400718ECC /* libRegal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		43ED0CFA17CBD402005536B1 = {
+			isa = PBXGroup;
+			children = (
+				4329A4FC17E6824600718ECC /* GLUT.framework */,
+				4329A47817E6627400718ECC /* Regal.xcodeproj */,
+				4329A47117E65FB600718ECC /* r3.xcodeproj */,
+				43ED0D0517CBD402005536B1 /* code */,
+				43ED0D0417CBD402005536B1 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		43ED0D0417CBD402005536B1 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				43ED0D0317CBD402005536B1 /* osdsimple */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		43ED0D0517CBD402005536B1 /* code */ = {
+			isa = PBXGroup;
+			children = (
+				43ED0D1517CC0CC7005536B1 /* main.cpp */,
+			);
+			name = code;
+			path = osdsimple;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		43ED0D0217CBD402005536B1 /* osdsimple */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "osdsimple" */;
+			buildPhases = (
+				43ED0CFF17CBD402005536B1 /* Sources */,
+				43ED0D0017CBD402005536B1 /* Frameworks */,
+				43ED0D0117CBD402005536B1 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = osdsimple;
+			productName = osdsimple;
+			productReference = 43ED0D0317CBD402005536B1 /* osdsimple */;
+			productType = "com.apple.product-type.tool";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		43ED0CFB17CBD402005536B1 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+				ORGANIZATIONNAME = "Cass Everitt";
+			};
+			buildConfigurationList = 43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "osdsimple" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 43ED0CFA17CBD402005536B1;
+			productRefGroup = 43ED0D0417CBD402005536B1 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4329A47217E65FB600718ECC /* Products */;
+					ProjectRef = 4329A47117E65FB600718ECC /* r3.xcodeproj */;
+				},
+				{
+					ProductGroup = 4329A47917E6627400718ECC /* Products */;
+					ProjectRef = 4329A47817E6627400718ECC /* Regal.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				43ED0D0217CBD402005536B1 /* osdsimple */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4329A47617E65FB600718ECC /* libr3.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libr3.a;
+			remoteRef = 4329A47517E65FB600718ECC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4329A47D17E6627400718ECC /* libRegal.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libRegal.a;
+			remoteRef = 4329A47C17E6627400718ECC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		43ED0CFF17CBD402005536B1 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		43ED0D0A17CBD402005536B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../regal/include,
+					../../r3/code,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				ONLY_ACTIVE_ARCH = YES;
+				SDKROOT = macosx10.7;
+			};
+			name = Debug;
+		};
+		43ED0D0B17CBD402005536B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
+				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
+				CLANG_CXX_LIBRARY = "compiler-default";
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = YES;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_ENABLE_OBJC_EXCEPTIONS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = (
+					../../regal/include,
+					../../r3/code,
+				);
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
+				SDKROOT = macosx10.7;
+			};
+			name = Release;
+		};
+		43ED0D0D17CBD402005536B1 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Debug;
+		};
+		43ED0D0E17CBD402005536B1 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "$(TARGET_NAME)";
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "osdsimple" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43ED0D0A17CBD402005536B1 /* Debug */,
+				43ED0D0B17CBD402005536B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "osdsimple" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				43ED0D0D17CBD402005536B1 /* Debug */,
+				43ED0D0E17CBD402005536B1 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 43ED0CFB17CBD402005536B1 /* Project object */;
+}
