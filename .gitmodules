@@ -4,3 +4,6 @@
 [submodule "r3"]
 	path = r3
 	url = http://github.com/casseveritt/r3
+[submodule "osd"]
+	path = osd
+	url = git@github.com:casseveritt/OpenSubdiv
