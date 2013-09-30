@@ -10,6 +10,7 @@
 		4329A47717E65FD100718ECC /* libr3.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47617E65FB600718ECC /* libr3.a */; };
 		4329A47E17E662A400718ECC /* libRegal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47D17E6627400718ECC /* libRegal.a */; };
 		4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A4FC17E6824600718ECC /* GLUT.framework */; };
+		43AC2CB817FA27600058D0C4 /* libOpenSubdiv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43AC2CB517FA27400058D0C4 /* libOpenSubdiv.a */; };
 		43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43ED0D1517CC0CC7005536B1 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -27,6 +28,13 @@
 			proxyType = 2;
 			remoteGlobalIDString = 43A6C1C615C48CD90063667E;
 			remoteInfo = Regal;
+		};
+		43AC2CB417FA27400058D0C4 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 43AC2CB017FA27400058D0C4 /* OpenSubdiv.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 43AC2C4B17FA25390058D0C4;
+			remoteInfo = OpenSubdiv;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -46,6 +54,7 @@
 		4329A47117E65FB600718ECC /* r3.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = r3.xcodeproj; path = ../../r3/build/mac/r3.xcodeproj; sourceTree = "<group>"; };
 		4329A47817E6627400718ECC /* Regal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Regal.xcodeproj; path = ../../regal/build/mac/Regal/Regal.xcodeproj; sourceTree = "<group>"; };
 		4329A4FC17E6824600718ECC /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
+		43AC2CB017FA27400058D0C4 /* OpenSubdiv.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OpenSubdiv.xcodeproj; path = ../../osd/projects/OpenSubdiv/OpenSubdiv.xcodeproj; sourceTree = "<group>"; };
 		43ED0D0317CBD402005536B1 /* osdsimple */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = osdsimple; sourceTree = BUILT_PRODUCTS_DIR; };
 		43ED0D1517CC0CC7005536B1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -55,6 +64,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				43AC2CB817FA27600058D0C4 /* libOpenSubdiv.a in Frameworks */,
 				4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */,
 				4329A47E17E662A400718ECC /* libRegal.a in Frameworks */,
 				4329A47717E65FD100718ECC /* libr3.a in Frameworks */,
@@ -80,10 +90,19 @@
 			name = Products;
 			sourceTree = "<group>";
 		};
+		43AC2CB117FA27400058D0C4 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				43AC2CB517FA27400058D0C4 /* libOpenSubdiv.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
 		43ED0CFA17CBD402005536B1 = {
 			isa = PBXGroup;
 			children = (
 				4329A4FC17E6824600718ECC /* GLUT.framework */,
+				43AC2CB017FA27400058D0C4 /* OpenSubdiv.xcodeproj */,
 				4329A47817E6627400718ECC /* Regal.xcodeproj */,
 				4329A47117E65FB600718ECC /* r3.xcodeproj */,
 				43ED0D0517CBD402005536B1 /* code */,
@@ -149,6 +168,10 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
+					ProductGroup = 43AC2CB117FA27400058D0C4 /* Products */;
+					ProjectRef = 43AC2CB017FA27400058D0C4 /* OpenSubdiv.xcodeproj */;
+				},
+				{
 					ProductGroup = 4329A47217E65FB600718ECC /* Products */;
 					ProjectRef = 4329A47117E65FB600718ECC /* r3.xcodeproj */;
 				},
@@ -177,6 +200,13 @@
 			fileType = archive.ar;
 			path = libRegal.a;
 			remoteRef = 4329A47C17E6627400718ECC /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		43AC2CB517FA27400058D0C4 /* libOpenSubdiv.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libOpenSubdiv.a;
+			remoteRef = 43AC2CB417FA27400058D0C4 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -222,6 +252,7 @@
 				HEADER_SEARCH_PATHS = (
 					../../regal/include,
 					../../r3/code,
+					../../osd/opensubdiv,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
@@ -252,6 +283,7 @@
 				HEADER_SEARCH_PATHS = (
 					../../regal/include,
 					../../r3/code,
+					../../osd/opensubdiv,
 				);
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx10.7;
