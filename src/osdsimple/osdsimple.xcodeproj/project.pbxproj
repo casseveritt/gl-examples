@@ -11,6 +11,8 @@
 		4329A47E17E662A400718ECC /* libRegal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A47D17E6627400718ECC /* libRegal.a */; };
 		4329A4FD17E6824600718ECC /* GLUT.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4329A4FC17E6824600718ECC /* GLUT.framework */; };
 		43AC2CB817FA27600058D0C4 /* libOpenSubdiv.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 43AC2CB517FA27400058D0C4 /* libOpenSubdiv.a */; };
+		43AC2CBD17FB2DB90058D0C4 /* simpleCpuSubdivision.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43AC2CBB17FB2DB90058D0C4 /* simpleCpuSubdivision.cpp */; };
+		43AC2CBE17FB2DB90058D0C4 /* simpleMain.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43AC2CBC17FB2DB90058D0C4 /* simpleMain.cpp */; };
 		43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 43ED0D1517CC0CC7005536B1 /* main.cpp */; };
 /* End PBXBuildFile section */
 
@@ -55,6 +57,10 @@
 		4329A47817E6627400718ECC /* Regal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = Regal.xcodeproj; path = ../../regal/build/mac/Regal/Regal.xcodeproj; sourceTree = "<group>"; };
 		4329A4FC17E6824600718ECC /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		43AC2CB017FA27400058D0C4 /* OpenSubdiv.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = OpenSubdiv.xcodeproj; path = ../../osd/projects/OpenSubdiv/OpenSubdiv.xcodeproj; sourceTree = "<group>"; };
+		43AC2CB917FB2DB90058D0C4 /* algebra.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = algebra.h; sourceTree = SOURCE_ROOT; };
+		43AC2CBA17FB2DB90058D0C4 /* glhelpers.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = glhelpers.h; sourceTree = SOURCE_ROOT; };
+		43AC2CBB17FB2DB90058D0C4 /* simpleCpuSubdivision.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simpleCpuSubdivision.cpp; sourceTree = SOURCE_ROOT; };
+		43AC2CBC17FB2DB90058D0C4 /* simpleMain.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simpleMain.cpp; sourceTree = SOURCE_ROOT; };
 		43ED0D0317CBD402005536B1 /* osdsimple */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = osdsimple; sourceTree = BUILT_PRODUCTS_DIR; };
 		43ED0D1517CC0CC7005536B1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
 /* End PBXFileReference section */
@@ -121,6 +127,10 @@
 		43ED0D0517CBD402005536B1 /* code */ = {
 			isa = PBXGroup;
 			children = (
+				43AC2CB917FB2DB90058D0C4 /* algebra.h */,
+				43AC2CBA17FB2DB90058D0C4 /* glhelpers.h */,
+				43AC2CBB17FB2DB90058D0C4 /* simpleCpuSubdivision.cpp */,
+				43AC2CBC17FB2DB90058D0C4 /* simpleMain.cpp */,
 				43ED0D1517CC0CC7005536B1 /* main.cpp */,
 			);
 			name = code;
@@ -217,6 +227,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				43ED0D1617CC0CC7005536B1 /* main.cpp in Sources */,
+				43AC2CBD17FB2DB90058D0C4 /* simpleCpuSubdivision.cpp in Sources */,
+				43AC2CBE17FB2DB90058D0C4 /* simpleMain.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
