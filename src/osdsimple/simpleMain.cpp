@@ -33,7 +33,6 @@
 
 extern void initOsd();
 extern void updateGeom();
-extern void display();
 extern int g_width, g_height, g_frame;
 
 void orig_reshape(int width, int height) {

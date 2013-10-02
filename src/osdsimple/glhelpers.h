@@ -38,23 +38,9 @@
 // ### OS Compatibility
 // The following is to ensure the example runs on Linux, Windows and OS X
 //
-#if defined(__APPLE__)
-    #if defined(OSD_USES_GLEW)
-        #include <GL/glew.h>
-    #else
-        #include <OpenGL/gl3.h>
-    #endif
-    #define GLFW_INCLUDE_GL3
-    #define GLFW_NO_GLU
-    #include <stdio.h>
-#else
-    #include <stdlib.h>
-    #include <stdio.h>
-    #include <GL/glew.h>
-    #if defined(WIN32)
-        #include <GL/wglew.h>
-    #endif
-#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <GL/Regal.h>
 
 #include "algebra.h"
 
@@ -203,19 +189,11 @@ initGL()
 void
 setupForDisplay(int width, int height, float size, float* center) 
 {
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    glViewport(0, 0, width, height);
-    setIdentity(g_proj);
     setIdentity(g_modelView);
-    setIdentity(g_mvp);
-
-    // setup the projection
-    float aspect = width/(float)height;
-    setPersp(45.0f, aspect, 0.01f, 500.0f, g_proj);
-
     // setup the model view matrix
     translateMatrix(-center[0], -center[1], -center[2], g_modelView);
     rotateMatrix(-90, 1, 0, 0, g_modelView); // z-up model
     translateMatrix(0, 0, -size, g_modelView);
+    glMatrixMultfEXT( GL_MODELVIEW, g_modelView );
 }
 

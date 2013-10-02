@@ -132,24 +132,27 @@ void reshape( int w, int h ) {
 
 static void display()
 {
-  void orig_idle();
-  orig_idle();
-  
   glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-  
 
+  void orig_idle();
+  //orig_idle();
+  
+  void orig_display();
+  orig_display();
+
+  
   glMatrixPushEXT( GL_MODELVIEW );
   glMatrixTranslatefEXT( GL_MODELVIEW, trans.x, trans.y, trans.z );
   r3::Vec3f axis;
   float angle;
   rot.GetValue( axis, angle );
   glMatrixRotatefEXT( GL_MODELVIEW, r3::ToDegrees( angle ), axis.x, axis.y, axis.z );
-  
+  glMatrixScalefEXT( GL_MODELVIEW, 0.25f, 0.25f, 0.25f );
   draw_model();
 
   glMatrixPopEXT( GL_MODELVIEW );
-  
+
   glutSwapBuffers();
 }
 

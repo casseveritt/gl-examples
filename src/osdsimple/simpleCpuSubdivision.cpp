@@ -144,8 +144,9 @@ typedef OpenSubdiv::HbrHalfedge<OpenSubdiv::OsdVertex> OsdHbrHalfedge;
 //
 std::vector<float> g_orgPositions,
                    g_normals;
+GLuint vao;
 
-// 
+//
 // Forward declarations. These functions will be described below as they are 
 // defined.
 //
@@ -372,7 +373,6 @@ createOsdContext(int level)
     // standard way. Here we setup a single VAO and enable points and normals 
     // as attributes on the vertex buffer and set the index buffer.
     //
-    GLuint vao;
     glGenVertexArrays(1, &vao);
     glBindVertexArray(vao);
     glBindBuffer(GL_ARRAY_BUFFER, g_vertexBuffer->BindVBO());
@@ -503,15 +503,32 @@ calcNormals(OsdHbrMesh * mesh,
 // using the buffers provided by our OSD objects
 //
 void
-display() 
+orig_display()
 {
+    glMatrixPushEXT( GL_MODELVIEW );
+  
     setupForDisplay(g_width, g_height, g_size, g_center);
+
+    glMatrixPopEXT( GL_MODELVIEW );
+  
+    glBindVertexArray(vao);
 
     //
     // Bind the GL vertex and index buffers
     //
-    glBindBuffer(GL_ARRAY_BUFFER, g_vertexBuffer->BindVBO());
 
+    glPointSize( 5.0 );
+    glColor3f( 1, 1, 1 );
+  
+    glBindBuffer( GL_ARRAY_BUFFER, g_vertexBuffer->BindVBO() );
+  GLfloat verts[] = {
+    -1, -1, 0,   0, 0, 0,
+     1, -1, 0,   0, 0, 0,
+     1,  1, 0,   0, 0, 0,
+    -1,  1, 0,   0, 0, 0,
+  };
+  glBufferSubData( GL_ARRAY_BUFFER, 0, 4 * 6 * sizeof( GLfloat ), verts );
+  
     OpenSubdiv::OsdDrawContext::PatchArrayVector const & patches = g_drawContext->patchArrays;
     for (int i=0; i<(int)patches.size(); ++i) {
         OpenSubdiv::OsdDrawContext::PatchArray const & patch = patches[i];
@@ -519,41 +536,23 @@ display()
         //
         // Bind the solid shaded program and draw elements based on the buffer contents
         //
-        bindProgram(g_quadFillProgram);
+        //bindProgram(g_quadFillProgram);
 
-        glDrawElements(GL_LINES_ADJACENCY, patch.GetNumIndices(),
-                       GL_UNSIGNED_INT, NULL);
+        //glDrawElements(GL_POINTS, patch.GetNumIndices(), GL_UNSIGNED_INT, NULL);
+      glDrawArrays( GL_POINTS, 0, 4 );
 
         //
         // Draw the wire frame over the solid shaded mesh
         //
-        bindProgram(g_quadLineProgram);
-        glUniform4f(glGetUniformLocation(g_quadLineProgram, "fragColor"), 
-                    0, 0, 0.5, 1);
-        glDrawElements(GL_LINES_ADJACENCY, patch.GetNumIndices(),
-                       GL_UNSIGNED_INT, NULL);
+        //bindProgram(g_quadLineProgram);
+        //glUniform4f(glGetUniformLocation(g_quadLineProgram, "fragColor"),
+        //            0, 0, 0.5, 1);
+      
+        // glDrawElements(GL_LINES, patch.GetNumIndices(), GL_UNSIGNED_INT, NULL);
     }
 
-    //
-    // This isn't strictly necessary, but unbind the GL state
-    //
-    glUseProgram(0);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    //glDisableClientState(GL_VERTEX_ARRAY);
-
-    //
-    // Draw the HUD/status text
-    //
-    //glColor3f(1, 1, 1);
-    drawString(10, 10, "LEVEL = %d", g_level);
-    drawString(10, 30, "# of Vertices = %d", g_farmesh->GetNumVertices());
-    drawString(10, 50, "KERNEL = CPU");
-    drawString(10, 70, "SUBDIVISION = %s", "CATMARK");
-
-    //
-    // Finish the current frame
-    //
-    glFinish();
+    glBindVertexArray( 0 );
+  
 }
 
 
