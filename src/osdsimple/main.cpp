@@ -130,6 +130,8 @@ void reshape( int w, int h ) {
 
 static void display()
 {
+  void orig_idle();
+  orig_idle();
   
   glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
