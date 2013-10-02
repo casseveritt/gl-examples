@@ -8,6 +8,26 @@ LIB = -L../../regal/lib/$(SYSTEM) -lRegal -lRegalGLU -lRegalGLUT -lX11
 
 SRC = $(wildcard *.cpp)
 
+OSDSRC  = ../../osd/cpuComputeContext.cpp
+OSDSRC += ../../osd/cpuComputeController.cpp
+OSDSRC += ../../osd/cpuEvalLimitContext.cpp
+OSDSRC += ../../osd/cpuEvalLimitController.cpp
+OSDSRC += ../../osd/cpuEvalLimitKernel.cpp
+OSDSRC += ../../osd/cpuEvalStencilsContext.cpp
+OSDSRC += ../../osd/cpuEvalStencilsController.cpp
+OSDSRC += ../../osd/cpuKernel.cpp
+OSDSRC += ../../osd/cpuVertexBuffer.cpp
+OSDSRC += ../../osd/drawContext.cpp
+OSDSRC += ../../osd/drawRegistry.cpp
+OSDSRC += ../../osd/error.cpp
+OSDSRC += ../../osd/evalLimitContext.cpp
+OSDSRC += ../../osd/gcdComputeController.cpp
+OSDSRC += ../../osd/gcdKernel.cpp
+OSDSRC += ../../osd/glDrawContext.cpp
+
+SRC += $(OSDSRC)
+
+
 OBJ = $(patsubst %.cpp,%.o, $(SRC))
 
 .cpp.o:
