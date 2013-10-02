@@ -125,6 +125,8 @@ void reshape( int w, int h ) {
   } else {
     glMatrixFrustumEXT( GL_PROJECTION, -fov, fov, -fov/aspect, fov/aspect, 0.1, 10);
   }
+  void orig_reshape( int w, int h );
+  orig_reshape( w, h );
   glutPostRedisplay();
 }
 
@@ -152,14 +154,6 @@ static void display()
 }
 
 static void init_opengl() {
-  glEnable( GL_DEPTH_TEST );
-  glDepthFunc( GL_LESS );
-  GLfloat shininess = 64.0f;
-  glMaterialfv( GL_FRONT_AND_BACK, GL_SHININESS, &shininess );
-  GLfloat spec[] = { 1, 1, 1, 1 };
-  glMaterialfv( GL_FRONT_AND_BACK, GL_SPECULAR, spec );
-  GLfloat lightpos[] = { 0.5, 1, 1, 0 };
-  glLightfv( GL_LIGHT0, GL_POSITION, lightpos );
 }
 
 static void keyboard(unsigned char c, int x, int y)
@@ -191,6 +185,13 @@ int main(int argc, const char * argv[])
 #endif
   
   init_opengl();
+  GLint err = glGetError();
+  if( err != GL_NO_ERROR ) {
+    printf( "Got a GL error (probably due to Regal init) before app initialization: %d\n", err );
+  }
+  
+  void orig_main( int argc, char ** argv );
+  orig_main( argc, (char **)argv );
   
   glutMouseFunc( mouse );
   glutMotionFunc( motion );
