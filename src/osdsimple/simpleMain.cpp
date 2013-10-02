@@ -36,8 +36,6 @@ extern void updateGeom();
 extern void display();
 extern int g_width, g_height, g_frame;
 
-static bool g_running = true;
-
 void orig_reshape(int width, int height) {
     g_width = width;
     g_height = height;
@@ -57,5 +55,6 @@ void orig_idle()
 int orig_main(int argc, char ** argv)
 {
     initOsd();
+    return 0;
 }
 

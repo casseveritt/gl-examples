@@ -196,8 +196,8 @@ initGL()
     glEnable(GL_CULL_FACE);
     glDepthFunc(GL_LEQUAL);
     
-    g_quadFillProgram = linkProgram("#define PRIM_QUAD\n#define GEOMETRY_OUT_FILL\n");
-    g_quadLineProgram = linkProgram("#define PRIM_QUAD\n#define GEOMETRY_OUT_LINE\n");
+    //g_quadFillProgram = linkProgram("#define PRIM_QUAD\n#define GEOMETRY_OUT_FILL\n");
+    //g_quadLineProgram = linkProgram("#define PRIM_QUAD\n#define GEOMETRY_OUT_LINE\n");
 }
 
 void
