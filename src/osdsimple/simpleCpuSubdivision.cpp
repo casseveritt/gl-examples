@@ -555,6 +555,7 @@ orig_display()
     glEnable( GL_POLYGON_OFFSET_LINE );
     glPolygonMode( GL_FRONT_AND_BACK, GL_LINE );
     glDrawElements(GL_QUADS, patch.GetNumIndices(), GL_UNSIGNED_INT, NULL);
+    glDisable( GL_POLYGON_OFFSET_LINE );
     glPolygonMode( GL_FRONT_AND_BACK, GL_FILL );
     
   }
