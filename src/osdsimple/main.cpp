@@ -130,16 +130,17 @@ void reshape( int w, int h ) {
   glutPostRedisplay();
 }
 
+static void idle() {
+  void orig_idle();
+  orig_idle();
+  glutPostRedisplay();
+}
+
+
 static void display()
 {
   glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-  void orig_idle();
-  //orig_idle();
-  
-  void orig_display();
-  orig_display();
 
   
   glMatrixPushEXT( GL_MODELVIEW );
@@ -149,7 +150,12 @@ static void display()
   rot.GetValue( axis, angle );
   glMatrixRotatefEXT( GL_MODELVIEW, r3::ToDegrees( angle ), axis.x, axis.y, axis.z );
   glMatrixScalefEXT( GL_MODELVIEW, 0.25f, 0.25f, 0.25f );
-  draw_model();
+  
+  //draw_model();
+
+  void orig_display();
+  orig_display();
+  
 
   glMatrixPopEXT( GL_MODELVIEW );
 
@@ -162,15 +168,26 @@ static void init_opengl() {
 static void keyboard(unsigned char c, int x, int y)
 {
   b[c] = ! b[c];
+  printf( "Got char %d\n", (int)c );
   switch (c)
   {
     case 'q':
     case 27:  /* Esc key */
       exit(0);
       break;
+    case ' ':
+      if( b[' '] ) {
+        printf( "Starting idle func.\n" );
+        glutIdleFunc( idle );
+      } else {
+        printf( "Stopping idle func.\n" );
+        glutIdleFunc( NULL );
+      }
+      break;
     default:
       break;
   }
+  fflush( stdout );
   glutPostRedisplay();
 }
 
