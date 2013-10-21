@@ -40,6 +40,97 @@
 #  include <GL/RegalGLUT.h>
 #endif
 
+
+GLuint InstanceShader( GLuint shader ) {
+  GLint type = 0;
+  glGetShaderiv( shader, GL_SHADER_TYPE, &type );
+  const char * typeString = "<unknown-shader-type>";
+  switch( type ) {
+    case GL_VERTEX_SHADER:
+      typeString = "GL_VERTEX_SHADER";
+      break;
+    case GL_FRAGMENT_SHADER:
+      typeString = "GL_FRAGMENT_SHADER";
+      break;
+    default:
+      break;
+  }
+  GLuint s = glCreateShader( type );
+  printf( "Instancing shader %d (%s) -> %d\n", shader, typeString, s );
+  GLint sz = 0;
+  glGetShaderiv( shader, GL_SHADER_SOURCE_LENGTH, &sz );
+  GLchar *src = new GLchar[ sz + 1 ];
+  GLsizei sz1 = 0;
+  glGetShaderSource( shader, sz + 1, &sz1, src );
+  GLchar *dumb[] =  { src, NULL };
+  src[sz] = 0;
+  printf("Shader source (length = %d):\n%s\n", sz, src );
+  GLsizei sizes[] = { sz, 0 };
+  glShaderSource( s, 1, dumb, sizes );
+  glCompileShader( s );
+  char dbgLog[1<<15];
+  int dbgLogLen = 0;
+  glGetShaderInfoLog( s, (1<<15) - 2, &dbgLogLen, dbgLog );
+  dbgLog[ dbgLogLen ] = 0;
+  printf( "Shader Info Log %d:\n\n%s\n", s, dbgLog );
+
+  delete [] src;
+  return s;
+}
+
+GLuint InstanceProgram( GLuint program ) {
+  GLuint p = glCreateProgram();
+  printf( "Instancing program %d -> %d\n", program, p );
+  
+  GLuint shaders[5];
+  GLsizei numShaders = 0;
+  
+  glGetAttachedShaders( program, 5, &numShaders, shaders );
+  printf( "Prog %d has %d shaders { ", program, numShaders );
+  for( int i = 0; i < numShaders; i++ ) {
+    printf( "%d", shaders[i] );
+    if( i != numShaders - 1 ) {
+      printf(", ");
+    }
+  }
+  printf( " }\n" );
+
+  for( int i = 0; i < numShaders; i++ ) {
+    GLuint s = InstanceShader( shaders[i] );
+    glAttachShader( p, s );
+  }
+
+  glLinkProgram( p );
+  
+  GLint activeAttributes = 0;
+  glGetProgramiv( program, GL_ACTIVE_ATTRIBUTES, &activeAttributes );
+  printf( "Program %d has %d attributes.\n", program, activeAttributes );
+  for( int i = 0; i < activeAttributes; i++ ) {
+    GLchar name[80];
+    GLsizei nameLen = 0;
+    GLint size;
+    GLenum type;
+    glGetActiveAttrib( program, i, 80, &nameLen, &size, &type, name );
+    name[nameLen] = 0;
+    GLint loc = glGetAttribLocation( program, name );
+    printf("  %s loc = %d\n", name, loc );
+    glBindAttribLocation( p, loc, name );
+  }
+
+  glLinkProgram( p );
+  {
+    char dbgLog[1<<15];
+    int dbgLogLen = 0;
+    glGetProgramInfoLog( p, (1<<15) - 2, &dbgLogLen, dbgLog );
+    dbgLog[ dbgLogLen ] = 0;
+    printf( "Program Info Log %d:\n\n %s\n", p, dbgLog );
+  }
+
+  return p;
+}
+  
+
+
 int width, height;
 int fbotex_sz = 256;
 int fbotex_px_sz = 4;
@@ -121,8 +212,7 @@ void GetBufferSubData( int offset, int size ) {
   printf( "sum of diff between emu and gbsd for offset=%d and size=%d: %d\n", offset, size, sum );
 }
 
-static void display()
-{
+static void display() {
   if( b['f'] ) {
     drawBufferObject( 0, 256 * 256 * 4);
     glutSwapBuffers();
@@ -276,8 +366,7 @@ static void init_opengl() {
   glBindFramebuffer( GL_FRAMEBUFFER, 0 );
 }
 
-static void keyboard(unsigned char c, int x, int y)
-{
+static void keyboard(unsigned char c, int x, int y) {
   b[c] = ! b[c];
   switch (c)
   {
@@ -292,6 +381,10 @@ static void keyboard(unsigned char c, int x, int y)
     case 's':
       gbsdSize = rand() & ((1<<25)-1);
       gbsdSize = std::min( gbsdSize, int(1<<24)-gbsdOffset );
+      break;
+    case 'p':
+      prog = InstanceProgram( prog );
+      break;
     default:
       break;
   }
@@ -299,8 +392,7 @@ static void keyboard(unsigned char c, int x, int y)
 }
 
 
-int main(int argc, const char * argv[])
-{
+int main(int argc, const char * argv[]) {
   glutInitDisplayString("rgba>=8 depth double");
   glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);

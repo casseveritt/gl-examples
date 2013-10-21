@@ -555,8 +555,7 @@ void reshape( int w, int h ) {
   glutPostRedisplay();
 }
 
-static void display()
-{
+static void display() {
   
   glClearColor( 0.5, 0.25, .25, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
@@ -585,8 +584,7 @@ static void init_opengl() {
   glLightfv( GL_LIGHT0, GL_POSITION, lightpos );
 }
 
-static void keyboard(unsigned char c, int x, int y)
-{
+static void keyboard(unsigned char c, int x, int y) {
   b[c] = ! b[c];
   switch (c)
   {
@@ -619,8 +617,7 @@ static void keyboard(unsigned char c, int x, int y)
 }
 
 
-int main(int argc, const char * argv[])
-{
+int main(int argc, const char * argv[]) {
   glutInitDisplayString("rgba>=8 depth double samples=4");
   glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);
