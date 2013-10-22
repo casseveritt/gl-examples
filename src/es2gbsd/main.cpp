@@ -40,23 +40,47 @@
 #  include <GL/RegalGLUT.h>
 #endif
 
+const char * TypeToName( GLenum type ) {
+  switch( type ) {
+    case GL_FLOAT:
+      return "GL_FLOAT";
+    case GL_FLOAT_VEC2:
+      return "GL_FLOAT_VEC2";
+    case GL_FLOAT_VEC3:
+      return "GL_FLOAT_VEC3";
+    case GL_FLOAT_VEC4:
+      return "GL_FLOAT_VEC4";
+    case GL_FLOAT_MAT2:
+      return "GL_FLOAT_MAT2";
+    case GL_FLOAT_MAT3:
+      return "GL_FLOAT_MAT3";
+    case GL_FLOAT_MAT4:
+      return "GL_FLOAT_MAT4";
+    default:
+      break;
+  }
+  return "<unknown-type>";
+}
 
-GLuint InstanceShader( GLuint shader ) {
-  GLint type = 0;
-  glGetShaderiv( shader, GL_SHADER_TYPE, &type );
-  const char * typeString = "<unknown-shader-type>";
+const char * ShaderTypeToName( GLenum type ) {
   switch( type ) {
     case GL_VERTEX_SHADER:
-      typeString = "GL_VERTEX_SHADER";
+      return "GL_VERTEX_SHADER";
       break;
     case GL_FRAGMENT_SHADER:
-      typeString = "GL_FRAGMENT_SHADER";
+      return "GL_FRAGMENT_SHADER";
       break;
     default:
       break;
   }
+  return "<unknown-shader-type>";
+}
+
+GLuint InstanceShader( GLuint shader ) {
+  GLint type = 0;
+  glGetShaderiv( shader, GL_SHADER_TYPE, &type );
   GLuint s = glCreateShader( type );
-  printf( "Instancing shader %d (%s) -> %d\n", shader, typeString, s );
+  printf( "Instancing shader %d (%s) -> %d\n", shader, ShaderTypeToName(type), s );
   GLint sz = 0;
   glGetShaderiv( shader, GL_SHADER_SOURCE_LENGTH, &sz );
   GLchar *src = new GLchar[ sz + 1 ];
@@ -104,7 +128,7 @@ GLuint InstanceProgram( GLuint program ) {
   
   GLint activeAttributes = 0;
   glGetProgramiv( program, GL_ACTIVE_ATTRIBUTES, &activeAttributes );
-  printf( "Program %d has %d attributes.\n", program, activeAttributes );
+  printf( "Program %d has %d active attributes.\n", program, activeAttributes );
   for( int i = 0; i < activeAttributes; i++ ) {
     GLchar name[80];
     GLsizei nameLen = 0;
@@ -116,7 +140,7 @@ GLuint InstanceProgram( GLuint program ) {
     printf("  %s loc = %d\n", name, loc );
     glBindAttribLocation( p, loc, name );
   }
-
+  
   glLinkProgram( p );
   {
     char dbgLog[1<<15];
@@ -125,6 +149,46 @@ GLuint InstanceProgram( GLuint program ) {
     dbgLog[ dbgLogLen ] = 0;
     printf( "Program Info Log %d:\n\n %s\n", p, dbgLog );
   }
+
+  GLint activeUniforms = 0;
+  glGetProgramiv( program, GL_ACTIVE_UNIFORMS, &activeUniforms );
+  glUseProgram( p );
+  glGetError();
+  printf( "Program %d has %d active uniforms.\n", program, activeUniforms );
+  for( int i = 0; i < activeUniforms; i++ ) {
+    GLchar name[80];
+    GLsizei nameLen = 0;
+    GLint size;
+    GLenum type;
+    glGetActiveUniform( program, i, 80, &nameLen, &size, &type, name );
+    name[nameLen] = 0;
+    printf( "  %s: type = %s, size = %d\n", name, TypeToName( type ), size );
+    GLint loc = glGetUniformLocation( p, name );
+    GLfloat buf[256];
+    int stride = 0;
+    switch( type ) {
+      case GL_FLOAT: stride = 1; break;
+      case GL_FLOAT_VEC4: stride = 4; break;
+      default:break;
+    }
+    for( int j = 0; j < size; j++ ) {
+      glGetUniformfv( program, i + j, buf + j * stride );
+    }
+    switch( type ) {
+      case GL_FLOAT:
+        glUniform1fv( loc, size, buf );
+        break;
+      case GL_FLOAT_VEC4:
+        glUniform4fv( loc, size, buf );
+      default:
+        break;
+    }
+    GLint err = glGetError();
+    if( err != GL_NO_ERROR ) {
+      printf( "Got an error: %d.\n", err );
+    }
+  }
+  glUseProgram( 0 );
 
   return p;
 }
@@ -283,6 +347,8 @@ static void init_opengl() {
     "attribute vec4 pos;\n"
     "attribute vec4 col;\n"
     "varying vec4 ocol;\n"
+    "uniform vec4 myVec4;\n"
+    "uniform float myFloat[8];\n"
     "\n"
     "void main() {\n"
     "  // step 1: scale normalized to integer [0,255]\n"
@@ -296,7 +362,9 @@ static void init_opengl() {
     "  // Or reducing steps 1-4 into a single MAD\n"
     "  vec2 p = pos.xy * (255.0/128.0) - (255.0/256.0);\n"
     "  gl_Position = vec4( p.x, p.y, 0.0, 1.0 );\n"
-    "  ocol = col;\n"
+    "  vec4 noop = vec4(myFloat[6]) * myVec4;\n"
+    //"  noop = vec4( 1.0, 1.0, 1.0, 1.0 );\n"
+    "  ocol = col * noop;\n"
     "}\n";
     char *vshader_list[] = { vshader, NULL };
     int vshader_list_sizes[] = { sizeof( vshader ), 0 };
@@ -352,6 +420,13 @@ static void init_opengl() {
     dbgLog[ dbgLogLen ] = 0;
     printf( "%s\n", dbgLog );
   }
+  
+  // set dummy uniforms to 1, so they pass through...
+  glUseProgram( prog );
+  GLfloat ones[] = { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+  glUniform4fv( glGetUniformLocation( prog, "myVec4" ), 1, ones);
+  glUniform1fv( glGetUniformLocation( prog, "myFloat[0]" ), 8, ones );
+  glUseProgram( 0 );
   
   glBindTexture( GL_TEXTURE_2D, fbotex );
   glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA, fbotex_sz, fbotex_sz, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL );
