@@ -307,7 +307,7 @@ UniformApiType GetUniformApiType( GLenum type ) {
 }
 
 
-int GetTypeStride( GLenum type ) {
+int GetTypeSize( GLenum type ) {
   switch( type ) {
     case GL_FLOAT:
     case GL_INT:
@@ -425,6 +425,78 @@ int GetTypeStride( GLenum type ) {
   return 0;
 }
 
+void GetUniform( GLuint program, GLint location, GLsizei count, GLenum type, void *value ) {
+  GLint size = GetTypeSize( type );
+  UniformApiType uat = GetUniformApiType( type );
+  char * val = reinterpret_cast<char *>( value );
+  switch( uat ) {
+    case UAT_Double:
+    case UAT_DoubleMatrix: {
+      for( int j = 0; j < count; j++ ) {
+        glGetUniformdv( program, location + j, reinterpret_cast<GLdouble *>( val + j * size ) );
+      }
+    } break;
+    case UAT_Float:
+    case UAT_FloatMatrix: {
+      for( int j = 0; j < count; j++ ) {
+        glGetUniformfv( program, location + j, reinterpret_cast<GLfloat *>( val + j * size ) );
+      }
+    } break;
+    case UAT_Int: {
+      for( int j = 0; j < count; j++ ) {
+        glGetUniformiv( program, location + j, reinterpret_cast<GLint *>( val + j * size ) );
+      }
+    } break;
+    case UAT_UnsignedInt: {
+      for( int j = 0; j < count; j++ ) {
+        glGetUniformuiv( program, location + j, reinterpret_cast<GLuint *>( val + j * size ) );
+      }
+    } break;
+    default:
+      break;
+    }
+}
+
+
+void SetUniform( GLint location, GLsizei count, GLenum type, const void *value ) {
+  GLint size = GetTypeSize( type );
+  UniformApiType uat = GetUniformApiType( type );
+  const char * val = reinterpret_cast<const char *>( value );
+  switch( uat ) {
+    case UAT_Double: {
+      typedef GLdouble Type;
+      typedef void (*Uniform)( GLint, GLsizei, const Type *);
+      Uniform uniformv[] = { glUniform1dv, glUniform2dv, glUniform3dv, glUniform4dv };
+      int idx = ( size / sizeof(Type) ) - 1;
+      uniformv[idx]( location, count, reinterpret_cast<const Type *>(val) );
+    } break;
+    case UAT_Float: {
+      typedef GLfloat Type;
+      typedef void (*Uniform)( GLint, GLsizei, const Type *);
+      Uniform uniformv[] = { glUniform1fv, glUniform2fv, glUniform3fv, glUniform4fv };
+      int idx = ( size / sizeof(Type) ) - 1;
+      uniformv[idx]( location, count, reinterpret_cast<const Type *>(val) );
+    } break;
+    case UAT_Int: {
+      typedef GLint Type;
+      typedef void (*Uniform)( GLint, GLsizei, const Type *);
+      Uniform uniformv[] = { glUniform1iv, glUniform2iv, glUniform3iv, glUniform4iv };
+      int idx = ( size / sizeof(Type) ) - 1;
+      uniformv[idx]( location, count, reinterpret_cast<const Type *>(val) );
+    } break;
+    case UAT_UnsignedInt: {
+      typedef GLuint Type;
+      typedef void (*Uniform)( GLint, GLsizei, const Type *);
+      Uniform uniformv[] = { glUniform1uiv, glUniform2uiv, glUniform3uiv, glUniform4uiv };
+      int idx = ( size / sizeof(Type) ) - 1;
+      uniformv[idx]( location, count, reinterpret_cast<const Type *>(val) );
+    } break;
+    default:
+      break;
+  }
+
+}
+
 
 GLuint InstanceShader( GLuint shader ) {
   GLint type = 0;
@@ -508,29 +580,15 @@ GLuint InstanceProgram( GLuint program ) {
   for( int i = 0; i < activeUniforms; i++ ) {
     GLchar name[80];
     GLsizei nameLen = 0;
-    GLint size;
+    GLint count;
     GLenum type;
-    glGetActiveUniform( program, i, 80, &nameLen, &size, &type, name );
+    glGetActiveUniform( program, i, 80, &nameLen, &count, &type, name );
     name[nameLen] = 0;
-    printf( "  %s: type = %s, size = %d\n", name, TypeToName( type ), size );
+    printf( "  %s: type = %s, count = %d\n", name, TypeToName( type ), count );
     GLint loc = glGetUniformLocation( p, name );
     char buf[4096];
-    int stride = GetTypeStride( type );
-
-    UniformApiType uat = GetUniformApiType( type );
-    switch( uat ) {
-      case UAT_Float: {
-        for( int j = 0; j < size; j++ ) {
-          glGetUniformfv( program, i + j, reinterpret_cast<GLfloat *>( buf + j * stride ) );
-        }
-        typedef void (*UniformFloat)( GLint, GLsizei, const GLfloat *);
-        UniformFloat uniformfv[] = { glUniform1fv, glUniform2fv, glUniform3fv, glUniform4fv };
-        int idx = (stride / 4) - 1;
-        uniformfv[idx]( loc, size, reinterpret_cast<GLfloat *>(buf) );
-      } break;
-      default:
-        break;
-    }
+    GetUniform( program, loc, count, type, buf );
+    SetUniform( loc, count, type, buf );
     GLint err = glGetError();
     if( err != GL_NO_ERROR ) {
       printf( "Got an error: %d.\n", err );
