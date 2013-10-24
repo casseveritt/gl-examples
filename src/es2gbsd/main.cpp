@@ -306,6 +306,45 @@ UniformApiType GetUniformApiType( GLenum type ) {
   return UAT_Invalid;
 }
 
+struct MatrixDims {
+  MatrixDims( int r, int c ) : rows( r ), cols( c ) {}
+  MatrixDims( const MatrixDims & rhs ) : rows( rhs.rows ), cols( rhs.cols ) {}
+  int rows;
+  int cols;
+};
+
+MatrixDims GetMatrixDims( GLenum type ) {
+  switch( type ) {
+    case GL_DOUBLE_MAT2: case GL_FLOAT_MAT2: return MatrixDims( 2, 2 );
+    case GL_DOUBLE_MAT3: case GL_FLOAT_MAT3: return MatrixDims( 3, 3 );
+    case GL_DOUBLE_MAT4: case GL_FLOAT_MAT4: return MatrixDims( 4, 4 );
+    case GL_DOUBLE_MAT2x3: case GL_FLOAT_MAT2x3: return MatrixDims( 2, 3 );
+    case GL_DOUBLE_MAT2x4: case GL_FLOAT_MAT2x4: return MatrixDims( 2, 4 );
+    case GL_DOUBLE_MAT3x2: case GL_FLOAT_MAT3x2: return MatrixDims( 3, 2 );
+    case GL_DOUBLE_MAT3x4: case GL_FLOAT_MAT3x4: return MatrixDims( 3, 4 );
+    case GL_DOUBLE_MAT4x2: case GL_FLOAT_MAT4x2: return MatrixDims( 4, 2 );
+    case GL_DOUBLE_MAT4x3: case GL_FLOAT_MAT4x3: return MatrixDims( 4, 3 );
+    default: break;
+  }
+  return MatrixDims( 0, 0 );
+}
+
+
+int GetMatrixElementSize( GLenum type ) {
+  switch( type ) {
+    case GL_FLOAT_MAT2: case GL_FLOAT_MAT3: case GL_FLOAT_MAT4:
+    case GL_FLOAT_MAT2x3: case GL_FLOAT_MAT2x4: case GL_FLOAT_MAT3x2:
+    case GL_FLOAT_MAT3x4:  case GL_FLOAT_MAT4x2: case GL_FLOAT_MAT4x3:
+      return sizeof( GLfloat );
+    case GL_DOUBLE_MAT2: case GL_DOUBLE_MAT3: case GL_DOUBLE_MAT4:
+    case GL_DOUBLE_MAT2x3: case GL_DOUBLE_MAT2x4: case GL_DOUBLE_MAT3x2:
+    case GL_DOUBLE_MAT3x4: case GL_DOUBLE_MAT4x2: case GL_DOUBLE_MAT4x3:
+      return sizeof( GLdouble );
+    default: break;
+  }
+  return 0;
+}
+
 
 int GetTypeSize( GLenum type ) {
   switch( type ) {
@@ -333,24 +372,16 @@ int GetTypeSize( GLenum type ) {
     case GL_DOUBLE_VEC2: return 8 * 2;
     case GL_DOUBLE_VEC3: return 8 * 3;
     case GL_DOUBLE_VEC4: return 8 * 4;
-    case GL_FLOAT_MAT2: return 4 * 2 * 2;
-    case GL_FLOAT_MAT3: return 4 * 3 * 3;
-    case GL_FLOAT_MAT4: return 4 * 4 * 4;
-    case GL_FLOAT_MAT2x3: return 4 * 2 * 3;
-    case GL_FLOAT_MAT2x4: return 4 * 2 * 4;
-    case GL_FLOAT_MAT3x2: return 4 * 3 * 2;
-    case GL_FLOAT_MAT3x4: return 4 * 3 * 4;
-    case GL_FLOAT_MAT4x2: return 4 * 4 * 2;
-    case GL_FLOAT_MAT4x3: return 4 * 4 * 3;
-    case GL_DOUBLE_MAT2: return 8 * 2 * 2;
-    case GL_DOUBLE_MAT3: return 8 * 3 * 3;
-    case GL_DOUBLE_MAT4: return 8 * 4 * 4;
-    case GL_DOUBLE_MAT2x3: return 8 * 2 * 3;
-    case GL_DOUBLE_MAT2x4: return 8 * 2 * 4;
-    case GL_DOUBLE_MAT3x2: return 8 * 3 * 2;
-    case GL_DOUBLE_MAT3x4: return 8 * 3 * 4;
-    case GL_DOUBLE_MAT4x2: return 8 * 4 * 2;
-    case GL_DOUBLE_MAT4x3: return 8 * 4 * 3;
+
+    case GL_FLOAT_MAT2: case GL_FLOAT_MAT3: case GL_FLOAT_MAT4:
+    case GL_FLOAT_MAT2x3:case GL_FLOAT_MAT2x4: case GL_FLOAT_MAT3x2:
+    case GL_FLOAT_MAT3x4: case GL_FLOAT_MAT4x2: case GL_FLOAT_MAT4x3:
+    case GL_DOUBLE_MAT2: case GL_DOUBLE_MAT3: case GL_DOUBLE_MAT4:
+    case GL_DOUBLE_MAT2x3: case GL_DOUBLE_MAT2x4: case GL_DOUBLE_MAT3x2:
+    case GL_DOUBLE_MAT3x4: case GL_DOUBLE_MAT4x2: case GL_DOUBLE_MAT4x3: {
+      MatrixDims md = GetMatrixDims( type );
+      return md.rows * md.cols * GetMatrixElementSize( type );
+    }
       
     case GL_SAMPLER_1D:
     case GL_SAMPLER_2D:
@@ -490,6 +521,28 @@ void SetUniform( GLint location, GLsizei count, GLenum type, const void *value )
       Uniform uniformv[] = { glUniform1uiv, glUniform2uiv, glUniform3uiv, glUniform4uiv };
       int idx = ( size / sizeof(Type) ) - 1;
       uniformv[idx]( location, count, reinterpret_cast<const Type *>(val) );
+    } break;
+    case UAT_DoubleMatrix: {
+      typedef GLdouble Type;
+      typedef void (*Uniform)( GLint, GLsizei, GLboolean, const Type *);
+      Uniform uniformv[3][3] = {
+        { glUniformMatrix2dv,   glUniformMatrix2x3dv, glUniformMatrix2x4dv },
+        { glUniformMatrix3x2dv, glUniformMatrix3dv,   glUniformMatrix3x4dv },
+        { glUniformMatrix4x2dv, glUniformMatrix4x3dv, glUniformMatrix4dv   }
+      };
+      MatrixDims md = GetMatrixDims( type );
+      uniformv[ md.rows - 1 ][ md.cols - 1 ]( location, count, GL_TRUE, reinterpret_cast<const Type *>(val) );
+    } break;
+    case UAT_FloatMatrix: {
+      typedef GLfloat Type;
+      typedef void (*Uniform)( GLint, GLsizei, GLboolean, const Type *);
+      Uniform uniformv[3][3] = {
+        { glUniformMatrix2fv,   glUniformMatrix2x3fv, glUniformMatrix2x4fv },
+        { glUniformMatrix3x2fv, glUniformMatrix3fv,   glUniformMatrix3x4fv },
+        { glUniformMatrix4x2fv, glUniformMatrix4x3fv, glUniformMatrix4fv   }
+      };
+      MatrixDims md = GetMatrixDims( type );
+      uniformv[ md.rows - 1 ][ md.cols - 1 ]( location, count, GL_TRUE, reinterpret_cast<const Type *>(val) );
     } break;
     default:
       break;
