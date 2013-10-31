@@ -40,6 +40,13 @@
 #  include <GL/RegalGLUT.h>
 #endif
 
+#include <string>
+#include <vector>
+#include <map>
+
+using namespace std;
+
+
 struct GlslType {
   GLenum numericType;
   enum BaseType {
@@ -329,7 +336,6 @@ MatrixDims GetMatrixDims( GLenum type ) {
   return MatrixDims( 0, 0 );
 }
 
-
 int GetMatrixElementSize( GLenum type ) {
   switch( type ) {
     case GL_FLOAT_MAT2: case GL_FLOAT_MAT3: case GL_FLOAT_MAT4:
@@ -344,7 +350,6 @@ int GetMatrixElementSize( GLenum type ) {
   }
   return 0;
 }
-
 
 int GetTypeSize( GLenum type ) {
   switch( type ) {
@@ -488,7 +493,6 @@ void GetUniform( GLuint program, GLint location, GLsizei count, GLenum type, voi
     }
 }
 
-
 void SetUniform( GLint location, GLsizei count, GLenum type, const void *value ) {
   GLint size = GetTypeSize( type );
   UniformApiType uat = GetUniformApiType( type );
@@ -550,6 +554,77 @@ void SetUniform( GLint location, GLsizei count, GLenum type, const void *value )
 
 }
 
+struct UniformElement {
+  string name;
+  GLint loc;
+  GLint count;
+  GLenum type;
+  int offset; // byte offset into a uniform store
+  int ver;
+};
+
+struct ProgramUniforms {
+
+  void AddElement( const string & name, GLint loc, GLint count, GLenum type ) {
+    UniformElement ue;
+    ue.name = name;
+    ue.loc = loc;
+    ue.count = count;
+    ue.type = type;
+    ue.offset = int( store.size() * sizeof( GLuint ) );
+    ue.ver = 0;
+    // FIXME: deal with alignment
+    int sz = GetTypeSize( ue.type );
+    store.insert( store.end(), ( sz * ue.count ) / sizeof( GLint ), 0 );
+    elements[ loc ] =  ue;
+  }
+  
+  void UpdateStore( GLint location, const void * ptr ) {
+    if( elements.find( location ) == elements.end() ) {
+      return;
+    }
+    UniformElement &ue = elements[ location ];
+    int sz = GetTypeSize( ue.type ) * ue.count;
+    memcpy( reinterpret_cast<char *>(&store[0]) + ue.offset, ptr, sz );
+    ue.ver++;
+  }
+  
+  typedef map<GLint,UniformElement,greater<GLint> > Map;
+  Map elements;
+  vector<GLuint> store;
+};
+
+struct InstanceUniformElement {
+  GLint programUniformLocation;
+  GLint instanceUniformLocation;
+  int ver;
+};
+
+struct ProgramInstanceUniforms {
+  vector<InstanceUniformElement> uniforms;
+  void Initialize( const ProgramUniforms & pu, GLuint prog ) {
+    uniforms.clear();
+    for( ProgramUniforms::Map::const_reverse_iterator it = pu.elements.crbegin(); it != pu.elements.crend(); ++it ) {
+      const UniformElement & ue = it->second;
+      InstanceUniformElement ie;
+      ie.programUniformLocation = ue.loc;
+      ie.instanceUniformLocation = glGetUniformLocation( prog, ue.name.c_str() );
+      ie.ver = -1;
+      uniforms.push_back( ie );
+    }
+  }
+  void Update( const ProgramUniforms & pu ) {
+   for( size_t i = 0; i < uniforms.size(); i++ ) {
+      InstanceUniformElement & ie = uniforms[i];
+      const UniformElement & ue = pu.elements.find( ie.programUniformLocation )->second;
+      if( ie.ver != ue.ver ) {
+        SetUniform( ie.instanceUniformLocation, ue.count, ue.type, reinterpret_cast<const char *>(&pu.store[0]) + ue.offset );
+        ie.ver = ue.ver;
+      }
+    }
+  }
+};
+
 
 GLuint InstanceShader( GLuint shader ) {
   GLint type = 0;
@@ -563,7 +638,7 @@ GLuint InstanceShader( GLuint shader ) {
   glGetShaderSource( shader, sz + 1, &sz1, src );
   GLchar *dumb[] =  { src, NULL };
   src[sz] = 0;
-  printf("Shader source (length = %d):\n%s\n", sz, src );
+  //printf("Shader source (length = %d):\n%s\n", sz, src );
   GLsizei sizes[] = { sz, 0 };
   glShaderSource( s, 1, dumb, sizes );
   glCompileShader( s );
@@ -627,9 +702,30 @@ GLuint InstanceProgram( GLuint program ) {
 
   GLint activeUniforms = 0;
   glGetProgramiv( program, GL_ACTIVE_UNIFORMS, &activeUniforms );
-  glUseProgram( p );
   glGetError();
   printf( "Program %d has %d active uniforms.\n", program, activeUniforms );
+  ProgramUniforms pu;
+  for( int i = 0; i < activeUniforms; i++ ) {
+    GLchar name[80];
+    GLsizei nameLen = 0;
+    GLint count;
+    GLenum type;
+    glGetActiveUniform( program, i, 80, &nameLen, &count, &type, name );
+    name[nameLen] = 0;
+    GLint loc = glGetUniformLocation( program, name );
+    pu.AddElement( name, loc, count, type );
+    char buf[4096];
+    GetUniform( program, loc, count, type, buf );
+    pu.UpdateStore( loc, buf );
+  }
+  
+  ProgramInstanceUniforms pi;
+  pi.Initialize( pu, p );
+  glUseProgram( p );
+  pi.Update( pu );
+  glUseProgram( 0 );
+
+  /*
   for( int i = 0; i < activeUniforms; i++ ) {
     GLchar name[80];
     GLsizei nameLen = 0;
@@ -647,7 +743,8 @@ GLuint InstanceProgram( GLuint program ) {
       printf( "Got an error: %d.\n", err );
     }
   }
-  glUseProgram( 0 );
+   */
+  
 
   return p;
 }
