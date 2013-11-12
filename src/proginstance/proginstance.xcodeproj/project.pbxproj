@@ -25,7 +25,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		43ED0D0317CBD402005536B1 /* gbsd */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gbsd; sourceTree = BUILT_PRODUCTS_DIR; };
+		43ED0D0317CBD402005536B1 /* proginstance */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = proginstance; sourceTree = BUILT_PRODUCTS_DIR; };
 		43ED0D0F17CBD653005536B1 /* GLUT.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = GLUT.framework; path = System/Library/Frameworks/GLUT.framework; sourceTree = SDKROOT; };
 		43ED0D1117CBD661005536B1 /* OpenGL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGL.framework; path = System/Library/Frameworks/OpenGL.framework; sourceTree = SDKROOT; };
 		43ED0D1517CC0CC7005536B1 /* main.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = main.cpp; sourceTree = SOURCE_ROOT; };
@@ -57,7 +57,7 @@
 		43ED0D0417CBD402005536B1 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				43ED0D0317CBD402005536B1 /* gbsd */,
+				43ED0D0317CBD402005536B1 /* proginstance */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -68,15 +68,15 @@
 				43ED0D1517CC0CC7005536B1 /* main.cpp */,
 			);
 			name = code;
-			path = gbsd;
+			path = proginstance;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		43ED0D0217CBD402005536B1 /* gbsd */ = {
+		43ED0D0217CBD402005536B1 /* proginstance */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "gbsd" */;
+			buildConfigurationList = 43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "proginstance" */;
 			buildPhases = (
 				43ED0CFF17CBD402005536B1 /* Sources */,
 				43ED0D0017CBD402005536B1 /* Frameworks */,
@@ -86,9 +86,9 @@
 			);
 			dependencies = (
 			);
-			name = gbsd;
-			productName = gbsd;
-			productReference = 43ED0D0317CBD402005536B1 /* gbsd */;
+			name = proginstance;
+			productName = proginstance;
+			productReference = 43ED0D0317CBD402005536B1 /* proginstance */;
 			productType = "com.apple.product-type.tool";
 		};
 /* End PBXNativeTarget section */
@@ -100,7 +100,7 @@
 				LastUpgradeCheck = 0460;
 				ORGANIZATIONNAME = "Cass Everitt";
 			};
-			buildConfigurationList = 43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "gbsd" */;
+			buildConfigurationList = 43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "proginstance" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 0;
@@ -112,7 +112,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				43ED0D0217CBD402005536B1 /* gbsd */,
+				43ED0D0217CBD402005536B1 /* proginstance */,
 			);
 		};
 /* End PBXProject section */
@@ -155,6 +155,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../regal/include;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
@@ -181,6 +182,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				HEADER_SEARCH_PATHS = ../../regal/include;
 				MACOSX_DEPLOYMENT_TARGET = 10.8;
 				SDKROOT = macosx;
 			};
@@ -203,7 +205,7 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "gbsd" */ = {
+		43ED0CFE17CBD402005536B1 /* Build configuration list for PBXProject "proginstance" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				43ED0D0A17CBD402005536B1 /* Debug */,
@@ -212,7 +214,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "gbsd" */ = {
+		43ED0D0C17CBD402005536B1 /* Build configuration list for PBXNativeTarget "proginstance" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				43ED0D0D17CBD402005536B1 /* Debug */,
