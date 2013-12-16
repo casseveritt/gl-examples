@@ -61,11 +61,31 @@ void reshape( int w, int h ) {
   glutPostRedisplay();
 }
 
+struct Pos { GLfloat x, y, z; };
+
+void show_depth() {
+
+  Pos *pix = new Pos[ width * height ];
+  for( int j = 0; j < height; j++ ) {
+    for( int i = 0; i < width; i++ ) {
+      Pos & p = pix[ j * width + i ];
+      p.x = i;
+      p.y = j;
+    }
+  }
+  
+}
+
+
 static void display()
 {
+  if( b['d'] ) {
+    show_depth();
+    return;
+  }
   
   glClearColor( 0, 0, 1, 0 );
-  glClear( GL_COLOR_BUFFER_BIT );
+  glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
   glColor3f( 1, 1, 1 );
   glPushMatrix();
