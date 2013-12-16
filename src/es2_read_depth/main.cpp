@@ -25,19 +25,19 @@
  OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-// Simple gl example template
-// Cass Everitt - Sept 15, 2013
+// How to read depth in ES2
+// Cass Everitt - December 16, 2013
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <algorithm>
 
+#include <GL/Regal.h>
+
 #if __APPLE__
-#  include <OpenGL/OpenGL.h>
-#  include <GLUT/GLUT.h>
+#include <GLUT/glut.h>
 #else
-#  include <GL/Regal.h>
-#  include <GL/RegalGLUT.h>
+#include <GL/RegalGLUT.h>
 #endif
 
 int width, height;
@@ -47,6 +47,17 @@ void reshape( int w, int h ) {
   width = w;
   height = h;
   glViewport( 0, 0, width, height );
+  glMatrixLoadIdentityEXT( GL_PROJECTION );
+  float a = float(w)/float(h);
+  float n = 0.4f;
+  float f = 3.0f;
+  if( a >= 1.0f ) {
+    glMatrixFrustumEXT( GL_PROJECTION, -n*a, n*a, -n, n, n, f );
+  } else {
+    glMatrixFrustumEXT( GL_PROJECTION, -n, n, -n/a, n/a, n, f );
+  }
+  glMatrixLoadIdentityEXT( GL_MODELVIEW );
+  glMatrixTranslatefEXT( GL_MODELVIEW, 0, 0, -1 );
   glutPostRedisplay();
 }
 
@@ -62,8 +73,8 @@ static void display()
   glBegin( GL_QUADS );
   glVertex2f  ( -1, -1 );
   glVertex2f  (  1, -1 );
-  glVertex2f  (  1,  1 );
-  glVertex2f  ( -1,  1 );
+  glVertex3f  (  1,  1, -1 );
+  glVertex3f  ( -1,  1, -1 );
   glEnd();
   glPopMatrix();
   
@@ -96,6 +107,10 @@ int main(int argc, const char * argv[])
   glutInit( &argc, (char **) argv);
   glutCreateWindow( "gl example template" );
 
+#if __APPLE__
+  RegalMakeCurrent( CGLGetCurrentContext() );
+#endif
+  
   init_opengl();
   
   glutDisplayFunc( display );
