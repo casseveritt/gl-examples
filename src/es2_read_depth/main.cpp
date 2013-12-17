@@ -63,45 +63,116 @@ void reshape( int w, int h ) {
 
 struct Pos { GLfloat x, y, z; };
 
-void show_depth() {
 
-  Pos *pix = new Pos[ width * height ];
+void show_depth() {
+  
+  float interval = 0.5;
+  GLuint *pix = new GLuint[ width * height ];
+  Pos *points = new Pos[ width * height ];
   for( int j = 0; j < height; j++ ) {
     for( int i = 0; i < width; i++ ) {
-      Pos & p = pix[ j * width + i ];
-      p.x = i;
-      p.y = j;
+      Pos & p = points[ j * width + i ];
+      p.x = i + 0.5;
+      p.y = j + 0.5;
+      p.z = interval;
     }
   }
   
+
+  glClearColor( 0, 0, 0, 0 );
+  glClear( GL_COLOR_BUFFER_BIT );
+  glDepthMask( GL_FALSE );
+  
+  glMatrixPushEXT( GL_PROJECTION );
+  glMatrixLoadIdentityEXT( GL_PROJECTION );
+  glMatrixOrthoEXT( GL_PROJECTION, 0, width, 0, height, 0, -1 );
+  glMatrixPushEXT( GL_MODELVIEW );
+  glMatrixLoadIdentityEXT( GL_MODELVIEW );
+  
+  for( int iterations = 0; iterations < 24; iterations++ ) {
+
+    glClearColor( 0, 0, 0, 0 );
+    glClear( GL_COLOR_BUFFER_BIT );
+    
+    glBegin( GL_POINTS );
+    for( int j = 0; j < height; j++ ) {
+      for( int i = 0; i < width; i++ ) {
+        Pos & p = points[ j * width + i ];
+        glColor3f( p.z, p.z, p.z );
+        glVertex3fv( &p.x );
+      }
+    }
+    glEnd();
+    
+    glReadPixels( 0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, pix );
+    
+    interval /= 2.0;
+    
+    for( int i = 0; i < width * height; i++ ) {
+      points[ i ].z += pix[i] ? interval : -interval;
+    }
+    
+  }
+
+  // draw every point - no clear needed
+  glDisable( GL_DEPTH_TEST );
+  glBegin( GL_POINTS );
+  for( int j = 0; j < height; j++ ) {
+    for( int i = 0; i < width; i++ ) {
+      Pos & p = points[ j * width + i ];
+      double z = p.z * ( (1<<24) - 1 );
+      int iz = z;
+      
+      glColor4ubv( (GLubyte *)&iz );
+      glVertex3fv( &p.x );
+    }
+  }
+  glEnd();
+  glEnable( GL_DEPTH_TEST );
+  
+  glMatrixPopEXT( GL_MODELVIEW );
+  glMatrixPopEXT( GL_PROJECTION );
+
+  glDepthMask( GL_TRUE );
+
+  delete [] points;
+  delete [] pix;
 }
 
 
 static void display()
 {
-  if( b['d'] ) {
-    show_depth();
-    return;
-  }
-  
   glClearColor( 0, 0, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
   
-  glColor3f( 1, 1, 1 );
+  glColor3f( 1, 0.5, 0 );
   glPushMatrix();
   glScalef( 0.9, 0.9, 0.9 );
   glBegin( GL_QUADS );
-  glVertex2f  ( -1, -1 );
-  glVertex2f  (  1, -1 );
-  glVertex3f  (  1,  1, -1 );
-  glVertex3f  ( -1,  1, -1 );
+  glVertex3f  ( -1, -0.1, 1 );
+  glVertex3f  (  1, -0.1, 1 );
+  glVertex3f  (  1,  1, -4 );
+  glVertex3f  ( -1,  1, -4 );
+  glEnd();
+  glScalef( 1, -1, 1 );
+  glColor3f( 0.5, 1, 0 );
+  glBegin( GL_TRIANGLES );
+  glVertex3f  ( -1, -1, -1.2 );
+  glVertex3f  (  1, -1, -1 );
+  glVertex3f  (  1,  1, -1.1 );
   glEnd();
   glPopMatrix();
+  
+  if( b['d'] ) {
+    show_depth();
+  }
   
   glutSwapBuffers();
 }
 
 static void init_opengl() {
+  glEnable( GL_DEPTH_TEST );
+  glDepthFunc( GL_LEQUAL );
 }
 
 static void keyboard(unsigned char c, int x, int y)
