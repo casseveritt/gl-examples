@@ -33,7 +33,14 @@
 #include <algorithm>
 
 #include <GL/Regal.h>
-#include <GL/RegalGLUT.h>
+#include <GL/RegalCGL.h>
+
+#if __APPLE__
+#include <GLUT/GLUT.h>
+#else
+#include <GL/glut.h>
+#endif
+//#include <GL/RegalGLUT.h>
 
 
 // subdiv data structures
