@@ -32,21 +32,29 @@
 #include <stdlib.h>
 #include <algorithm>
 
-#if __APPLE__
-#  include <OpenGL/OpenGL.h>
+#include <GL/Regal.h>
+
+#if REGAL_SYS_OSX
 #  include <GLUT/GLUT.h>
+#  include <GL/RegalCGL.h>
 #else
-#  include <GL/Regal.h>
-#  include <GL/RegalGLUT.h>
+#  include <GL/glut.h>
 #endif
 
+#include <math.h>
+#include <r3/linear.h>
+
 int width, height;
+float aspect = 1.0f;
 bool b[256];
 
 void reshape( int w, int h ) {
   width = w;
   height = h;
+  aspect = float(w)/float(h);
   glViewport( 0, 0, width, height );
+  glMatrixLoadIdentityEXT( GL_PROJECTION );
+  glMatrixOrthoEXT( GL_PROJECTION, -0.1f, 1 * aspect, -0.1f, 1, -1, 1 );
   glutPostRedisplay();
 }
 
@@ -55,16 +63,25 @@ static void display()
   
   glClearColor( 0, 0, 1, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
+
+  glPushMatrix();
   
   glColor3f( 1, 1, 1 );
-  glPushMatrix();
-  glScalef( 0.9, 0.9, 0.9 );
-  glBegin( GL_QUADS );
-  glVertex2f  ( -1, -1 );
-  glVertex2f  (  1, -1 );
-  glVertex2f  (  1,  1 );
-  glVertex2f  ( -1,  1 );
+  float angle = r3::ToRadians( -45 );
+  float angleIncr = r3::ToRadians( 10 );
+  glBegin( GL_LINES );
+  for( int i = 0; i < 9; i++ ) {
+    glVertex2f( 0, 0 );
+    glVertex2f( cosf(angle), sinf(angle) );
+    angle += angleIncr;
+  }
   glEnd();
+  
+  glVertex2f  ( 0, 0 );
+  glVertex2f  (  1, 0 );
+  glVertex2f  (  1,  1 );
+  glVertex2f  ( 0,  1 );
+
   glPopMatrix();
   
   glutSwapBuffers();
@@ -95,6 +112,11 @@ int main(int argc, const char * argv[])
   glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);
   glutCreateWindow( "gl example template" );
+
+#if REGAL_SYS_OSX
+  // Regal workaround for OSX GLUT
+  RegalMakeCurrent(CGLGetCurrentContext());
+#endif
 
   init_opengl();
   
