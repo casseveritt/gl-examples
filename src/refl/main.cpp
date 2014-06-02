@@ -65,12 +65,41 @@ void reshape( int w, int h ) {
 vector<Vec2f> reflPoint;
 vector<Vec2f> targetPoint;
 
+Vec2f computeNormal( Vec2f eye, Vec2f p, Vec2f target ) {
+  Vec2f n;
+  Vec2f ve = eye - p;
+  Vec2f vt = target - p;
+  n = ve + vt;
+  n.Normalize();
+  return n;
+}
+
+float computeIntersection( Vec2f p1, Vec2f p2, Vec2f p3, Vec2f p4 ) {
+  
+  float denom = ( p1.x - p2.x ) * ( p3.y - p4.y ) - ( p1.y - p2.y ) * ( p3.x - p4.x );
+  if( denom == 0 ) {
+    return -1.0f;
+  }
+  
+  Vec2f m;
+  m.x =  ( p1.x * p2.y - p1.y * p2.x ) * ( p3.x - p4.x ) - ( p1.x - p2.x ) * ( p3.x * p4.y - p3.y * p4.x );
+  m.y =  ( p1.x * p2.y - p1.y * p2.x ) * ( p3.y - p3.y ) - ( p1.y - p2.y ) * ( p3.x * p4.y - p3.y * p4.x );
+  
+  m /= denom;
+
+  m -= p1;
+  p2 -= p1;
+  
+  return m.Length() / p2.Length();
+}
+
+
 void initPoints() {
 
-  int rays = 10;
+  int rays = 40;
   
-  Vec2f targetStart( 10, 10 );
-  Vec2f targetEnd( 3, 3 );
+  Vec2f targetStart( 10, 14 );
+  Vec2f targetEnd( 3, 7 );
   targetStart /= 20.f;
   targetEnd /= 20.f;
   targetPoint.clear();
@@ -79,38 +108,53 @@ void initPoints() {
     Vec2f p = f * targetEnd + (1.0f - f) * targetStart;
     targetPoint.push_back( p );
   }
+
+  
   
   Vec2f reflStart( 3, -3 );
   Vec2f reflEnd( 6, 3 );
   reflStart /= 20.f;
   reflEnd /= 20.f;
   reflPoint.clear();
+
+  float angle = ToRadians( -45 );
+  float angleIncr = ToRadians( (45.0f - -45.0f ) / ( rays - 1 ) );
+
   for( int i = 0; i < rays; i++ ) {
-    float f = float(i) / (rays - 1);
-    Vec2f p = f * reflEnd + (1.0f - f) * reflStart;
+    Vec2f p( cosf( angle ), sinf( angle ) );
+    angle += angleIncr;
     reflPoint.push_back( p );
   }
+  
+  reflPoint[0] *= 0.2f;
+  
+  for( int i = 0; i < rays - 1; i++ ) {
+    Vec2f n = computeNormal( Vec2f(0,0), reflPoint[i], targetPoint[i] );
+    Vec2f t( n.y, -n.x );
+    float u = computeIntersection( Vec2f(0,0), reflPoint[i+1], reflPoint[i], reflPoint[i] + t );
+    if( u > 0 ) {
+      reflPoint[i+1] *= u;
+    }
+  }
+  
   
 }
 
 static void display()
 {
   
-  glClearColor( 0, 0, 1, 0 );
+  glClearColor( 0, 0, 0, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
 
   glPushMatrix();
   
   glColor3f( 1, 1, 1 );
-  float angle = ToRadians( -45 );
-  float angleIncr = ToRadians( 10 );
   glBegin( GL_LINES );
   for( size_t i = 0; i < targetPoint.size(); i++ ) {
     glVertex2f( 0, 0 );
     glVertex2fv( reflPoint[i].Ptr() );
     glVertex2fv( reflPoint[i].Ptr() );
     glVertex2fv( targetPoint[i].Ptr() );
-    angle += angleIncr;
   }
   glEnd();
   
