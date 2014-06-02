@@ -43,6 +43,10 @@
 
 #include <math.h>
 #include <r3/linear.h>
+#include <vector>
+
+using namespace std;
+using namespace r3;
 
 int width, height;
 float aspect = 1.0f;
@@ -54,8 +58,39 @@ void reshape( int w, int h ) {
   aspect = float(w)/float(h);
   glViewport( 0, 0, width, height );
   glMatrixLoadIdentityEXT( GL_PROJECTION );
-  glMatrixOrthoEXT( GL_PROJECTION, -0.1f, 1 * aspect, -0.1f, 1, -1, 1 );
+  glMatrixOrthoEXT( GL_PROJECTION, -0.4f, 1 * aspect, -0.4f, 1, -1, 1 );
   glutPostRedisplay();
+}
+
+vector<Vec2f> reflPoint;
+vector<Vec2f> targetPoint;
+
+void initPoints() {
+
+  int rays = 10;
+  
+  Vec2f targetStart( 10, 10 );
+  Vec2f targetEnd( 3, 3 );
+  targetStart /= 20.f;
+  targetEnd /= 20.f;
+  targetPoint.clear();
+  for( int i = 0; i < rays; i++ ) {
+    float f = float(i) / (rays - 1);
+    Vec2f p = f * targetEnd + (1.0f - f) * targetStart;
+    targetPoint.push_back( p );
+  }
+  
+  Vec2f reflStart( 3, -3 );
+  Vec2f reflEnd( 6, 3 );
+  reflStart /= 20.f;
+  reflEnd /= 20.f;
+  reflPoint.clear();
+  for( int i = 0; i < rays; i++ ) {
+    float f = float(i) / (rays - 1);
+    Vec2f p = f * reflEnd + (1.0f - f) * reflStart;
+    reflPoint.push_back( p );
+  }
+  
 }
 
 static void display()
@@ -67,21 +102,18 @@ static void display()
   glPushMatrix();
   
   glColor3f( 1, 1, 1 );
-  float angle = r3::ToRadians( -45 );
-  float angleIncr = r3::ToRadians( 10 );
+  float angle = ToRadians( -45 );
+  float angleIncr = ToRadians( 10 );
   glBegin( GL_LINES );
-  for( int i = 0; i < 9; i++ ) {
+  for( size_t i = 0; i < targetPoint.size(); i++ ) {
     glVertex2f( 0, 0 );
-    glVertex2f( cosf(angle), sinf(angle) );
+    glVertex2fv( reflPoint[i].Ptr() );
+    glVertex2fv( reflPoint[i].Ptr() );
+    glVertex2fv( targetPoint[i].Ptr() );
     angle += angleIncr;
   }
   glEnd();
   
-  glVertex2f  ( 0, 0 );
-  glVertex2f  (  1, 0 );
-  glVertex2f  (  1,  1 );
-  glVertex2f  ( 0,  1 );
-
   glPopMatrix();
   
   glutSwapBuffers();
@@ -111,7 +143,7 @@ int main(int argc, const char * argv[])
   glutInitDisplayString("rgba>=8 depth double");
   glutInitWindowSize(768, 768);
   glutInit( &argc, (char **) argv);
-  glutCreateWindow( "gl example template" );
+  glutCreateWindow( "refl" );
 
 #if REGAL_SYS_OSX
   // Regal workaround for OSX GLUT
@@ -119,6 +151,7 @@ int main(int argc, const char * argv[])
 #endif
 
   init_opengl();
+  initPoints();
   
   glutDisplayFunc( display );
   glutReshapeFunc( reshape );
