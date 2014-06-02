@@ -58,9 +58,12 @@ void reshape( int w, int h ) {
   aspect = float(w)/float(h);
   glViewport( 0, 0, width, height );
   glMatrixLoadIdentityEXT( GL_PROJECTION );
-  glMatrixOrthoEXT( GL_PROJECTION, -0.4f, 1 * aspect, -0.4f, 1, -1, 1 );
+  glMatrixOrthoEXT( GL_PROJECTION, -1.0 * aspect, 1.0f * aspect, -1.0f, 1.0f, -1, 1 );
   glutPostRedisplay();
 }
+
+Vec2f translate;
+float scale = 1.0f;
 
 vector<Vec2f> reflPoint;
 vector<Vec2f> targetPoint;
@@ -96,10 +99,10 @@ float computeIntersection( Vec2f p1, Vec2f p2, Vec2f p3, Vec2f p4 ) {
 
 void initPoints() {
 
-  int rays = 40;
+  int rays = 600;
   
-  Vec2f targetStart( 10, 14 );
-  Vec2f targetEnd( 3, 7 );
+  Vec2f targetStart( 3, 4 );
+  Vec2f targetEnd( 9, 10 );
   targetStart /= 20.f;
   targetEnd /= 20.f;
   targetPoint.clear();
@@ -126,7 +129,7 @@ void initPoints() {
     reflPoint.push_back( p );
   }
   
-  reflPoint[0] *= 0.2f;
+  reflPoint[0] *= 0.4f;
   
   for( int i = 0; i < rays - 1; i++ ) {
     Vec2f n = computeNormal( Vec2f(0,0), reflPoint[i], targetPoint[i] );
@@ -137,6 +140,18 @@ void initPoints() {
     }
   }
   
+  int thin = 20;
+  vector<Vec2f> sparse;
+  for( size_t i = 0; i < reflPoint.size(); i += thin ) {
+    sparse.push_back( reflPoint[i] );
+  }
+
+  reflPoint = sparse;
+  sparse.clear();
+  for( size_t i = 0; i < targetPoint.size(); i += thin ) {
+    sparse.push_back( targetPoint[i] );
+  }
+  targetPoint = sparse;
   
 }
 
@@ -146,11 +161,26 @@ static void display()
   glClearColor( 0, 0, 0, 0 );
   glClear( GL_COLOR_BUFFER_BIT );
 
-  glPushMatrix();
+  glMatrixPushEXT( GL_MODELVIEW );
+  glMatrixLoadIdentityEXT( GL_MODELVIEW );
+  glMatrixScalefEXT( GL_MODELVIEW, scale, scale, scale );
+  glMatrixTranslatefEXT( GL_MODELVIEW, translate.x, translate.y, 0 );
+  
+  
+  GLfloat colors[][3] = {
+    { 1, 0, 0 },
+    { 1, 1, 0 },
+    { 0, 1, 0 },
+    { 0, 1, 1 },
+    { 0, 0, 1 },
+    { 1, 0, 1 },
+    { 1, .5, .5 }
+  };
   
   glColor3f( 1, 1, 1 );
   glBegin( GL_LINES );
   for( size_t i = 0; i < targetPoint.size(); i++ ) {
+    glColor3fv( colors[ i % 7 ] );
     glVertex2f( 0, 0 );
     glVertex2fv( reflPoint[i].Ptr() );
     glVertex2fv( reflPoint[i].Ptr() );
@@ -158,7 +188,7 @@ static void display()
   }
   glEnd();
   
-  glPopMatrix();
+  glMatrixPopEXT( GL_MODELVIEW );
   
   glutSwapBuffers();
 }
@@ -174,6 +204,24 @@ static void keyboard(unsigned char c, int x, int y)
     case 'q':
     case 27:  /* Esc key */
       exit(0);
+      break;
+    case 's':
+      scale *= 1.05f;
+      break;
+    case 'S':
+      scale /= 1.05f;
+      break;
+    case 'x':
+      translate.x += .05f;
+      break;
+    case 'X':
+      translate.x -= .05f;
+      break;
+    case 'y':
+      translate.y += .05f;
+      break;
+    case 'Y':
+      translate.y -= .05f;
       break;
     default:
       break;
