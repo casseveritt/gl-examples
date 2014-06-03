@@ -97,12 +97,14 @@ float computeIntersection( Vec2f p1, Vec2f p2, Vec2f p3, Vec2f p4 ) {
 }
 
 
+Vec2f eye(0,0);
+
 void initPoints() {
 
   int rays = 600;
   
-  Vec2f targetStart( 3, 4 );
-  Vec2f targetEnd( 9, 10 );
+  Vec2f targetStart( 3, 7 );
+  Vec2f targetEnd( 8, 10 );
   targetStart /= 20.f;
   targetEnd /= 20.f;
   targetPoint.clear();
@@ -129,7 +131,8 @@ void initPoints() {
     f = ( i / ( rays / 2.0f ) ) - 1.0f;
     f *= 2.0f;
     f *= f;
-    f += 0.4;
+    f += 1;
+    //f = 1;  // hijack distribution to make it uniform
     delta.push_back( f );
     sum += f;
   }
@@ -144,12 +147,12 @@ void initPoints() {
     reflPoint.push_back( p );
   }
   
-  reflPoint[0] *= 0.4f;
+  reflPoint[0] *= 0.3f;
   
   for( int i = 0; i < rays - 1; i++ ) {
-    Vec2f n = computeNormal( Vec2f(0,0), reflPoint[i], targetPoint[i] );
+    Vec2f n = computeNormal( eye, reflPoint[i], targetPoint[i] );
     Vec2f t( n.y, -n.x );
-    float u = computeIntersection( Vec2f(0,0), reflPoint[i+1], reflPoint[i], reflPoint[i] + t );
+    float u = computeIntersection( eye, reflPoint[i+1], reflPoint[i], reflPoint[i] + t );
     if( u > 0 ) {
       reflPoint[i+1] *= u;
     }
@@ -160,13 +163,31 @@ void initPoints() {
   for( size_t i = 0; i < reflPoint.size(); i += thin ) {
     sparse.push_back( reflPoint[i] );
   }
+  sparse.push_back( reflPoint.back() );
 
   reflPoint = sparse;
   sparse.clear();
   for( size_t i = 0; i < targetPoint.size(); i += thin ) {
     sparse.push_back( targetPoint[i] );
   }
+  sparse.push_back( targetPoint.back() );
   targetPoint = sparse;
+  
+  float minLen = 1000;
+  float maxLen = 0;
+  float avgLen = 0;
+  
+  for( size_t i = 0; i < reflPoint.size(); i++ ) {
+    float len = (eye - reflPoint[i]).Length() + (targetPoint[i] - reflPoint[i]).Length();
+    minLen = min( len, minLen );
+    maxLen = max( len, maxLen );
+    avgLen += len;
+    printf( "Ray len %d: %0.3f\n", i, len );
+  }
+  
+  avgLen /= reflPoint.size();
+  
+  printf( "Ray length stats: min: %.3f, max: %.3f, avg: %.3f\n", minLen, maxLen, avgLen );
   
 }
 
