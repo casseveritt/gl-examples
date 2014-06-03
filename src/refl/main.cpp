@@ -113,7 +113,6 @@ void initPoints() {
   }
 
   
-  
   Vec2f reflStart( 3, -3 );
   Vec2f reflEnd( 6, 3 );
   reflStart /= 20.f;
@@ -121,11 +120,27 @@ void initPoints() {
   reflPoint.clear();
 
   float angle = ToRadians( -45 );
-  float angleIncr = ToRadians( (45.0f - -45.0f ) / ( rays - 1 ) );
+  float angleDelta = ToRadians( 45.0f - -45.0f ) ;
 
+  vector<float> delta;
+  float sum = 0;
+  for( int i = 0; i < rays; i++ ) {
+    float f;
+    f = ( i / ( rays / 2.0f ) ) - 1.0f;
+    f *= 2.0f;
+    f *= f;
+    f += 0.4;
+    delta.push_back( f );
+    sum += f;
+  }
+  
+  for( int i = 0; i < rays; i++ ) {
+    delta[i] *= ( angleDelta / sum );
+  }
+  
   for( int i = 0; i < rays; i++ ) {
     Vec2f p( cosf( angle ), sinf( angle ) );
-    angle += angleIncr;
+    angle += delta[i];
     reflPoint.push_back( p );
   }
   
