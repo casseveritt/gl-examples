@@ -66,12 +66,15 @@ Vec2f translate;
 float scale = 1.0f;
 
 vector<Vec2f> reflPoint;
+vector<Vec2f> reflNormal;
 vector<Vec2f> targetPoint;
 
 Vec2f computeNormal( Vec2f eye, Vec2f p, Vec2f target ) {
   Vec2f n;
   Vec2f ve = eye - p;
+  ve.Normalize();
   Vec2f vt = target - p;
+  vt.Normalize();
   n = ve + vt;
   n.Normalize();
   return n;
@@ -96,15 +99,28 @@ float computeIntersection( Vec2f p1, Vec2f p2, Vec2f p3, Vec2f p4 ) {
   return m.Length() / p2.Length();
 }
 
+void thinVector( vector<Vec2f> & v ) {
+  int thin = 200;
+  vector<Vec2f> sparse;
+  for( size_t i = 0; i < v.size(); i += thin ) {
+    sparse.push_back( v[i] );
+  }
+  sparse.push_back( v.back() );
+  v = sparse;
+}
 
 Vec2f eye(0,0);
 
 void initPoints() {
 
-  int rays = 600;
+  reflPoint.clear();
+  reflNormal.clear();
+  targetPoint.clear();
+
+  int rays = 6000;
   
   Vec2f targetStart( 3, 7 );
-  Vec2f targetEnd( 8, 10 );
+  Vec2f targetEnd( 7, 12 );
   targetStart /= 20.f;
   targetEnd /= 20.f;
   targetPoint.clear();
@@ -119,7 +135,7 @@ void initPoints() {
   Vec2f reflEnd( 6, 3 );
   reflStart /= 20.f;
   reflEnd /= 20.f;
-  reflPoint.clear();
+  
 
   float angle = ToRadians( -45 );
   float angleDelta = ToRadians( 45.0f - -45.0f ) ;
@@ -132,7 +148,7 @@ void initPoints() {
     f *= 2.0f;
     f *= f;
     f += 1;
-    //f = 1;  // hijack distribution to make it uniform
+    f = 1;  // hijack distribution to make it uniform
     delta.push_back( f );
     sum += f;
   }
@@ -151,27 +167,19 @@ void initPoints() {
   
   for( int i = 0; i < rays - 1; i++ ) {
     Vec2f n = computeNormal( eye, reflPoint[i], targetPoint[i] );
+    reflNormal.push_back( n );
+    
     Vec2f t( n.y, -n.x );
     float u = computeIntersection( eye, reflPoint[i+1], reflPoint[i], reflPoint[i] + t );
     if( u > 0 ) {
       reflPoint[i+1] *= u;
     }
   }
+  reflNormal.push_back( computeNormal( eye, reflPoint.back(), targetPoint.back() ) );
   
-  int thin = 20;
-  vector<Vec2f> sparse;
-  for( size_t i = 0; i < reflPoint.size(); i += thin ) {
-    sparse.push_back( reflPoint[i] );
-  }
-  sparse.push_back( reflPoint.back() );
-
-  reflPoint = sparse;
-  sparse.clear();
-  for( size_t i = 0; i < targetPoint.size(); i += thin ) {
-    sparse.push_back( targetPoint[i] );
-  }
-  sparse.push_back( targetPoint.back() );
-  targetPoint = sparse;
+  thinVector( reflPoint );
+  thinVector( reflNormal );
+  thinVector( targetPoint );
   
   float minLen = 1000;
   float maxLen = 0;
@@ -182,7 +190,7 @@ void initPoints() {
     minLen = min( len, minLen );
     maxLen = max( len, maxLen );
     avgLen += len;
-    printf( "Ray len %d: %0.3f\n", i, len );
+    printf( "Ray len %d: %0.3f\n", (int)i, len );
   }
   
   avgLen /= reflPoint.size();
@@ -190,6 +198,21 @@ void initPoints() {
   printf( "Ray length stats: min: %.3f, max: %.3f, avg: %.3f\n", minLen, maxLen, avgLen );
   
 }
+
+static void drawRefl( Vec2f t, Vec2f p, Vec2f n ) {
+  glVertex2fv( t.Ptr() );
+  glVertex2fv( p.Ptr() );
+  n.Normalize();
+  Vec2f i = t - p;
+  Vec2f r = 2 * i.Dot(n) * n - i;
+  r.Normalize();
+  r *= 4.0f;
+  r += p;
+  glVertex2fv( p.Ptr() );
+  glVertex2fv( r.Ptr() );
+}
+
+int currTarget = 0;
 
 static void display()
 {
@@ -212,17 +235,67 @@ static void display()
     { 1, 0, 1 },
     { 1, .5, .5 }
   };
-  
+
   glColor3f( 1, 1, 1 );
-  glBegin( GL_LINES );
+
+  // eye
+  glBegin(GL_POINTS);
+  glVertex2fv( eye.Ptr() );
+  glEnd();
+
+  // reflector
+  glBegin(GL_LINE_STRIP);
+  for( size_t i = 0; i < reflPoint.size(); i++ ) {
+    glVertex2fv( reflPoint[i].Ptr() );
+  }
+  glEnd();
+
+  // display
+  glBegin(GL_LINE_STRIP);
   for( size_t i = 0; i < targetPoint.size(); i++ ) {
-    glColor3fv( colors[ i % 7 ] );
-    glVertex2f( 0, 0 );
-    glVertex2fv( reflPoint[i].Ptr() );
-    glVertex2fv( reflPoint[i].Ptr() );
     glVertex2fv( targetPoint[i].Ptr() );
   }
   glEnd();
+  
+  if( b['i'] ) {
+
+    glColor3f( 1, 1, 0 );
+    glBegin(GL_LINES);
+    drawRefl( targetPoint[currTarget], reflPoint[currTarget], reflNormal[currTarget] );
+    for( int i = -2; i <= 2; i++ ) {
+      int adj = currTarget + i;
+      if( adj < 0 || adj >= reflPoint.size() ) {
+        continue;
+      }
+      drawRefl( targetPoint[currTarget], reflPoint[adj], reflNormal[adj] );
+    }
+    glEnd();
+    
+  } else {
+    glColor3f( 1, 1, 1 );
+    glBegin( GL_LINES );
+    for( size_t i = 0; i < targetPoint.size(); i++ ) {
+      glColor3fv( colors[ i % 7 ] );
+      glVertex2f( 0, 0 );
+      glVertex2fv( reflPoint[i].Ptr() );
+      glVertex2fv( reflPoint[i].Ptr() );
+      glVertex2fv( targetPoint[i].Ptr() );
+    }
+    glEnd();
+
+  }
+
+  if( b['n'] ) {
+    glColor3f(0, .5, .5);
+    glBegin(GL_LINES);
+    for( size_t i = 0; i < reflNormal.size(); i++ ) {
+      glVertex2fv( (0.3f * reflNormal[i] + reflPoint[i]).Ptr() );
+      glVertex2fv( reflPoint[i].Ptr() );
+    }
+    glEnd();
+  }
+  
+
   
   glMatrixPopEXT( GL_MODELVIEW );
   
@@ -258,6 +331,18 @@ static void keyboard(unsigned char c, int x, int y)
       break;
     case 'Y':
       translate.y -= .05f;
+      break;
+    case 't':
+      currTarget++;
+      if( currTarget >= targetPoint.size() ) {
+        currTarget = 0;
+      }
+      break;
+    case 'T':
+      currTarget--;
+      if( currTarget < 0 ) {
+        currTarget = targetPoint.size() - 1;
+      }
       break;
     default:
       break;
